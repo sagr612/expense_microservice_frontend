@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "636141753737",
+    "project_id": "expo-expense-push-notify",
+    "storage_bucket": "expo-expense-push-notify.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636141753737:android:f217a08b81b2f375423d58",
+        "android_client_info": {
+          "package_name": "com.expense_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjLVftR51qWMpRW3wRnke8rVsZlC15iew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
