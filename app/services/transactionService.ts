@@ -1,0 +1,277 @@
+import { expenseApi } from "@/app/services/api";
+import { PagedResponse, Transaction } from "@/constants/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export interface TransactionPayload {
+  title: string;
+  amount: number;
+  category: string;
+  type: "income" | "expense";
+  note?: string;
+}
+const getAuthHeaders = async () => {
+  const token = await AsyncStorage.getItem("accessToken");
+
+  return {
+    // "X-User-Id": userId,
+    Authorization: `Bearer ${token}`,
+  };
+};
+export const getTransactions = async (
+  userId: string,
+): Promise<PagedResponse<Transaction>> => {
+  try {
+    console.log("Fetching transactions for user:", userId);
+    const token = await AsyncStorage.getItem("accessToken");
+
+    const response = await expenseApi.get<PagedResponse<Transaction>>(
+      "/api/v1/expenses",
+      {
+        headers: {
+          "X-User-Id": userId,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    console.log("Successfully fetched :", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error while fetching transactions for user :",
+      userId,
+      " : ",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const getTransaction = async (
+  userId: string,
+  externalId: string,
+): Promise<Transaction> => {
+  try {
+    console.log("Fetching transaction for external ID:", externalId);
+    const token = await AsyncStorage.getItem("accessToken");
+
+    const response = await expenseApi.get<Transaction>(
+      `/api/v1/expenses/${externalId}`,
+      {
+        headers: {
+          "X-User-Id": userId,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    console.log("Successfully fetched :", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error while fetching transaction for external ID :",
+      externalId,
+      " : ",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const createTransaction = async (
+  payload: Transaction,
+  userId: string,
+): Promise<Transaction> => {
+  try {
+    const token = await AsyncStorage.getItem("accessToken");
+    console.log("Creating transaction for user:", payload.userId);
+    const response = await expenseApi.post<Transaction>(
+      "/api/v1/expenses",
+      payload,
+      {
+        headers: {
+          "X-User-Id": userId,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    console.log("Successfully created transaction for user:", payload.userId);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error while creating transaction for user :",
+      payload.userId,
+      " : ",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const deleteTransaction = async (
+  userId: string,
+  externalId: string,
+): Promise<void> => {
+  try {
+    console.log("Deleting transaction for external ID:", externalId);
+    const token = await AsyncStorage.getItem("accessToken");
+
+    await expenseApi.delete(`/api/v1/expenses/${externalId}`, {
+      headers: {
+        "X-User-Id": userId,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log(
+      "Successfully deleted transaction with external ID:",
+      externalId,
+    );
+  } catch (error: any) {
+    console.error(
+      "Error while deleting transaction for external ID :",
+      externalId,
+      " : ",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const updateTransaction = async (
+  payload: Transaction,
+  userId: string,
+): Promise<Transaction> => {
+  try {
+    console.log("updating transaction for user:", payload.userId);
+    const response = await expenseApi.put<Transaction>(
+      "/api/v1/expenses",
+      payload,
+      {
+        headers: {
+          "X-User-Id": userId,
+        },
+      },
+    );
+    console.log("Successfully updated transaction for user:", payload.userId);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error while updating transaction for user :",
+      payload.userId,
+      " : ",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export interface CategoryAnalytics {
+  analytics: Record<string, number>;
+}
+
+export interface MonthlyAnalytics {
+  year: number;
+  month: number;
+  totalAmount: number;
+}
+
+export const getCategoryAnalytics = async (
+  userId: string,
+): Promise<CategoryAnalyticsResponse> => {
+  try {
+    const response = await expenseApi.get<CategoryAnalyticsResponse>(
+      "/api/v1/expenses/analytics/category",
+      {
+        headers: await getAuthHeaders(),
+      },
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error fetching category analytics:",
+      error.response?.data || error.message,
+    );
+
+    throw error;
+  }
+};
+
+export const getMonthlyAnalytics = async (
+  userId: string,
+): Promise<MonthlyAnalyticsDto[]> => {
+  try {
+    const response = await expenseApi.get<MonthlyAnalyticsDto[]>(
+      "/api/v1/expenses/analytics/monthly",
+      {
+        headers: await getAuthHeaders(),
+      },
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Error fetching monthly analytics:",
+      error.response?.data || error.message,
+    );
+
+    throw error;
+  }
+};
+
+export interface CategoryAnalyticsResponse {
+  analytics: Partial<Record<CategoryType, number>>;
+}
+export type CategoryType =
+  | "FOOD"
+  | "TRANSPORT"
+  | "SHOPPING"
+  | "BILLS"
+  | "ENTERTAINMENT"
+  | "HEALTH"
+  | "SALARY"
+  | "FREELANCE"
+  | "INVESTMENT"
+  | "GIFT"
+  | "OTHERS";
+
+export interface MonthlyAnalyticsDto {
+  year: number;
+  month: number;
+  totalAmount: number;
+}
+export const getBudgetStatus = async (month: number, year: number) => {
+  const response = await expenseApi.get(
+    `api/v1/expenses/budgets/status?month=${month}&year=${year}`,
+    {
+      headers: await getAuthHeaders(),
+    },
+  );
+
+  return response.data;
+};
+
+export interface BudgetStatus {
+  category: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  percentageUsed: number;
+}
+
+export interface BudgetDto {
+  category: string;
+  amount: number;
+  month: number;
+  year: number;
+}
+
+export const createBudget = async (budget: BudgetDto): Promise<BudgetDto> => {
+  const response = await expenseApi.post<BudgetDto>(
+    "api/v1/expenses/budgets",
+    budget,
+    {
+      headers: await getAuthHeaders(),
+    },
+  );
+
+  return response.data;
+};

@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Opening Expense Tracker...</title>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      // Redirect to your app scheme
+      window.location.href = `expensetracker://create`;
+
+      // Fallback after 2s if app isn't installed
+      setTimeout(() => {
+        document.getElementById("fallback").style.display = "block";
+      }, 2000);
+    </script>
+  </head>
+  <body>
+    <p>Opening your app...</p>
+    <p id="fallback" style="display: none">
+      App not installed.
+      <a href="https://play.google.com/store/apps/...">Download here</a>
+    </p>
+  </body>
+</html>
