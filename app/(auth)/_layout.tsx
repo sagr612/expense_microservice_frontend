@@ -1,19 +1,29 @@
-import React from 'react';
-import {Redirect, Stack} from "expo-router";
-import {useAuth} from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { Redirect, Stack } from "expo-router";
+import React from "react";
+import { ActivityIndicator, View } from "react-native";
 
 const AuthLayout = () => {
-    const { login, isLoading, user } = useAuth();
-    if (user) {
+  const { user, isLoading } = useAuth();
 
-        return <Redirect href="/(root)"/>;
-    }
+  if (isLoading) {
     return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="login" options={{headerShown: false}}  />
-            <Stack.Screen name="SignUp" options={{headerShown: false}}  />
-        </Stack>
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#7C3AED" />
+      </View>
     );
+  }
+
+  if (user) {
+    return <Redirect href="/(root)" />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="login" />
+      <Stack.Screen name="SignUp" />
+    </Stack>
+  );
 };
 
 export default AuthLayout;

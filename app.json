@@ -21,7 +21,8 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "package": "com.expense_tracker"
+      "package": "com.expense_tracker",
+      "permissions": ["RECEIVE_SMS", "READ_SMS"]
     },
     "web": {
       "output": "static",

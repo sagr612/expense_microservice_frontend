@@ -1,16 +1,20 @@
 import { useAuth } from "@/context/AuthContext";
+import { useCurrency } from "@/hooks/useCurrency";
 import Icon from "@expo/vector-icons/Ionicons";
 import { Picker } from "@react-native-picker/picker";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-  Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import {
   BudgetStatus,
   createBudget,
@@ -38,23 +42,44 @@ const categoryIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> =
     OTHER: "ellipsis-horizontal",
   };
 
+const cardShadow = {
+  shadowColor: "#1E1B2E",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.05,
+  shadowRadius: 14,
+  elevation: 3,
+};
+
 const BudgetScreen = () => {
   const [budgets, setBudgets] = useState<BudgetStatus[]>([]);
   const { userId } = useAuth();
+  const { currency } = useCurrency();
   const [modalVisible, setModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [category, setCategory] = useState("FOOD");
   const [amount, setAmount] = useState("");
   const [month, setMonth] = useState((new Date().getMonth() + 1).toString());
   const [year, setYear] = useState(new Date().getFullYear().toString());
 
-  const handleCreateBudget = async () => {
-    try {
-      if (!amount) {
-        Alert.alert("Validation", "Please enter budget amount");
-        return;
-      }
+  const formatAmount = (value: number) =>
+    `${currency.symbol}${value.toLocaleString("en-IN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
 
+  const handleCreateBudget = async () => {
+    if (!amount) {
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please enter budget amount",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
       await createBudget({
         category,
         amount: Number(amount),
@@ -69,21 +94,33 @@ const BudgetScreen = () => {
       setYear(new Date().getFullYear().toString());
 
       loadBudgets();
-      Alert.alert("Success", "Budget created successfully");
+      Toast.show({
+        type: "success",
+        text1: "Budget Created",
+        text2: "Your budget has been created successfully",
+      });
     } catch (error) {
       console.log(error);
-      Alert.alert("Error", "Failed to create budget");
+      Toast.show({
+        type: "error",
+        text1: "Creation Failed",
+        text2: "Please try again",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  useEffect(() => {
-    loadBudgets();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadBudgets();
+    }, []),
+  );
 
   const loadBudgets = async () => {
     try {
       const now = new Date();
-      const data = await getBudgetStatus(6, now.getFullYear());
+      const data = await getBudgetStatus(now.getMonth() + 1, now.getFullYear());
       setBudgets(data);
     } catch (err) {
       console.log(err);
@@ -91,19 +128,27 @@ const BudgetScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-[#F7F7FB]">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <View className="px-6 pt-14 pb-8 bg-white">
-          <Text className="text-4xl font-poppins-bold text-gray-900">
-            Budgets
-          </Text>
-          <Text className="text-gray-500 mt-1 text-lg">
-            Track your monthly spending goals
-          </Text>
+        <View className="rounded-b-[36px] overflow-hidden">
+          <View
+            className="pt-14 pb-8 px-6"
+            style={{ backgroundColor: "#7C3AED" }}
+          >
+            <Text className="text-white/60 text-[13px] font-poppins">
+              This month
+            </Text>
+            <Text className="text-white text-[28px] font-poppins-bold mt-0.5">
+              Budgets
+            </Text>
+            <Text className="text-white/70 text-[14px] mt-1 font-poppins">
+              Track your monthly spending goals
+            </Text>
+          </View>
         </View>
 
         {/* Budget Cards or Empty State */}
@@ -116,40 +161,43 @@ const BudgetScreen = () => {
               );
               const exceeded = budget.spent > budget.budget;
               const remaining = Math.max(0, budget.budget - budget.spent);
+              const color = categoryColors[budget.category] || "#8B5CF6";
 
               return (
                 <View
                   key={budget.category}
-                  className="bg-white rounded-3xl p-6 mb-5 shadow-sm border border-gray-100"
+                  className="bg-white rounded-[28px] p-6 mb-4"
+                  style={cardShadow}
                 >
                   {/* Category Header */}
                   <View className="flex-row items-center justify-between mb-5">
-                    <View className="flex-row items-center gap-3">
+                    <View className="flex-row items-center flex-1">
                       <View
-                        className="w-12 h-12 rounded-2xl items-center justify-center"
-                        style={{
-                          backgroundColor: `${categoryColors[budget.category] || "#8B5CF6"}15`,
-                        }}
+                        className="w-11 h-11 rounded-full items-center justify-center"
+                        style={{ backgroundColor: `${color}18` }}
                       >
                         <Icon
                           name={categoryIcons[budget.category] || "wallet"}
-                          size={26}
-                          color={categoryColors[budget.category] || "#8B5CF6"}
+                          size={20}
+                          color={color}
                         />
                       </View>
-                      <Text className="font-poppins-semibold text-2xl text-gray-900">
+                      <Text
+                        numberOfLines={1}
+                        className="font-poppins-semibold text-[17px] text-gray-900 ml-3 flex-1"
+                      >
                         {budget.category}
                       </Text>
                     </View>
 
                     <View
-                      className={`px-4 py-1.5 rounded-full ${
-                        exceeded ? "bg-red-100" : "bg-green-100"
+                      className={`px-3 py-1 rounded-full ${
+                        exceeded ? "bg-red-50" : "bg-emerald-50"
                       }`}
                     >
                       <Text
-                        className={`font-semibold text-sm ${
-                          exceeded ? "text-red-600" : "text-green-600"
+                        className={`font-poppins-semibold text-[11px] ${
+                          exceeded ? "text-red-600" : "text-emerald-600"
                         }`}
                       >
                         {exceeded ? "OVER BUDGET" : "ON TRACK"}
@@ -160,32 +208,35 @@ const BudgetScreen = () => {
                   {/* Amounts */}
                   <View className="flex-row justify-between items-end mb-4">
                     <View>
-                      <Text className="text-gray-500 text-sm">Budget</Text>
-                      <Text className="text-3xl font-poppins-semibold text-gray-900 mt-1">
-                        ₹{budget.budget.toLocaleString()}
+                      <Text className="text-gray-400 text-xs font-poppins">
+                        Budget
+                      </Text>
+                      <Text className="text-2xl font-poppins-bold text-gray-900 mt-1">
+                        {formatAmount(budget.budget)}
                       </Text>
                     </View>
 
                     <View className="items-end">
-                      <Text className="text-gray-500 text-sm">Remaining</Text>
+                      <Text className="text-gray-400 text-xs font-poppins">
+                        Remaining
+                      </Text>
                       <Text
-                        className={`text-2xl font-semibold mt-1 ${
+                        className={`text-xl font-poppins-bold mt-1 ${
                           exceeded ? "text-red-500" : "text-emerald-600"
                         }`}
                       >
-                        ₹{remaining.toLocaleString()}
+                        {formatAmount(remaining)}
                       </Text>
                     </View>
                   </View>
 
                   {/* Progress Bar */}
-                  <View className="relative h-3 bg-gray-100 rounded-full overflow-hidden mb-3">
+                  <View className="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-3">
                     <View
                       className="h-full rounded-full"
                       style={{
                         width: `${percentage}%`,
-                        backgroundColor:
-                          categoryColors[budget.category] || "#8B5CF6",
+                        backgroundColor: exceeded ? "#EF4444" : color,
                       }}
                     />
                   </View>
@@ -193,15 +244,19 @@ const BudgetScreen = () => {
                   {/* Spent & Percentage */}
                   <View className="flex-row justify-between items-center">
                     <View>
-                      <Text className="text-gray-500 text-sm">Spent</Text>
-                      <Text className="font-semibold text-lg text-gray-800">
-                        ₹{budget.spent.toLocaleString()}
+                      <Text className="text-gray-400 text-xs font-poppins">
+                        Spent
+                      </Text>
+                      <Text className="font-poppins-semibold text-[15px] text-gray-800 mt-0.5">
+                        {formatAmount(budget.spent)}
                       </Text>
                     </View>
 
                     <View className="items-end">
-                      <Text className="text-gray-500 text-sm">Used</Text>
-                      <Text className="font-semibold text-lg text-gray-800">
+                      <Text className="text-gray-400 text-xs font-poppins">
+                        Used
+                      </Text>
+                      <Text className="font-poppins-semibold text-[15px] text-gray-800 mt-0.5">
                         {budget.percentageUsed.toFixed(1)}%
                       </Text>
                     </View>
@@ -211,23 +266,25 @@ const BudgetScreen = () => {
             })
           ) : (
             /* Empty State */
-            <View className="items-center justify-center py-20">
-              <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center mb-6">
-                <Icon name="wallet-outline" size={48} color="#9CA3AF" />
+            <View className="items-center justify-center py-16">
+              <View className="w-24 h-24 rounded-full bg-violet-50 items-center justify-center mb-6">
+                <Icon name="wallet-outline" size={44} color="#A855F7" />
               </View>
-              <Text className="text-2xl font-poppins-semibold text-gray-900 mb-2">
+              <Text className="text-xl font-poppins-bold text-gray-900 mb-2">
                 No budgets yet
               </Text>
-              <Text className="text-gray-500 text-center text-lg max-w-[260px]">
-                Create your first budget to start tracking your monthly spending
+              <Text className="text-gray-400 text-center text-[14px] font-poppins px-10 leading-6">
+                Create your first budget to start tracking your monthly
+                spending.
               </Text>
 
               <TouchableOpacity
                 onPress={() => setModalVisible(true)}
-                className="mt-8 flex-row items-center gap-2 bg-violet-600 px-8 py-4 rounded-2xl active:bg-violet-700"
+                activeOpacity={0.85}
+                className="mt-7 flex-row items-center bg-violet-600 px-6 py-3.5 rounded-full"
               >
-                <Icon name="add" size={24} color="white" />
-                <Text className="text-white font-poppins-semibold text-lg">
+                <Icon name="add" size={18} color="white" />
+                <Text className="text-white font-poppins-semibold text-[14px] ml-1.5">
                   Create First Budget
                 </Text>
               </TouchableOpacity>
@@ -236,21 +293,22 @@ const BudgetScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Floating Add Button - Hidden when no budgets (optional) */}
+      {/* Floating Add Button */}
       {budgets.length > 0 && (
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
-          className="absolute bottom-8 right-6 w-16 h-16 rounded-full items-center justify-center active:scale-95"
+          activeOpacity={0.85}
+          className="absolute bottom-8 right-6 w-16 h-16 rounded-full items-center justify-center"
           style={{
-            backgroundColor: "#8B5CF6",
+            backgroundColor: "#7C3AED",
             elevation: 8,
-            shadowColor: "#8B5CF6",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
+            shadowColor: "#7C3AED",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 12,
           }}
         >
-          <Icon name="add" size={32} color="white" />
+          <Icon name="add" size={30} color="white" />
         </TouchableOpacity>
       )}
 
@@ -261,96 +319,129 @@ const BudgetScreen = () => {
         transparent
         onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl px-6 pt-6 pb-8">
-            <Text className="text-3xl font-poppins-bold text-gray-900 mb-1">
-              New Budget
-            </Text>
-            <Text className="text-gray-500 mb-8">Set your spending limit</Text>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setModalVisible(false)}
+          >
+            <View className="flex-1 justify-end bg-black/45">
+              <TouchableOpacity activeOpacity={1}>
+                <View className="bg-white rounded-t-[32px] px-6 pt-3 pb-8">
+                  <View className="items-center mb-5">
+                    <View className="w-10 h-1 rounded-full bg-gray-200" />
+                  </View>
 
-            {/* Category */}
-            <Text className="text-gray-600 font-medium mb-2">Category</Text>
-            <View className="border border-gray-200 rounded-2xl mb-6 overflow-hidden bg-gray-50">
-              <Picker
-                selectedValue={category}
-                onValueChange={(value) => setCategory(value)}
-                style={{ height: 56 }}
-              >
-                <Picker.Item label="🍔 Food" value="FOOD" />
-                <Picker.Item label="🚕 Transport" value="TRANSPORT" />
-                <Picker.Item label="🩺 Health" value="HEALTH" />
-                <Picker.Item label="🎬 Entertainment" value="ENTERTAINMENT" />
-                <Picker.Item label="🛍️ Shopping" value="SHOPPING" />
-                <Picker.Item label="📚 Education" value="EDUCATION" />
-                <Picker.Item label="📦 Other" value="OTHER" />
-              </Picker>
-            </View>
+                  <Text className="text-xl font-poppins-bold text-gray-900 mb-1">
+                    New budget
+                  </Text>
+                  <Text className="text-gray-400 text-[13px] font-poppins mb-6">
+                    Set your spending limit
+                  </Text>
 
-            {/* Amount */}
-            <Text className="text-gray-600 font-medium mb-2">
-              Budget Amount
-            </Text>
-            <View className="relative mb-6">
-              <Text className="absolute left-4 top-4 text-gray-400 text-xl font-medium">
-                ₹
-              </Text>
-              <TextInput
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="numeric"
-                placeholder="0"
-                className="border border-gray-200 rounded-2xl pl-10 pr-4 py-4 text-xl font-semibold bg-gray-50"
-              />
-            </View>
+                  {/* Category */}
+                  <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                    Category
+                  </Text>
+                  <View className="border border-gray-100 rounded-2xl mb-5 overflow-hidden bg-gray-50">
+                    <Picker
+                      selectedValue={category}
+                      onValueChange={(value) => setCategory(value)}
+                      style={{ height: 52 }}
+                    >
+                      <Picker.Item label="🍔 Food" value="FOOD" />
+                      <Picker.Item label="🚕 Transport" value="TRANSPORT" />
+                      <Picker.Item label="🩺 Health" value="HEALTH" />
+                      <Picker.Item
+                        label="🎬 Entertainment"
+                        value="ENTERTAINMENT"
+                      />
+                      <Picker.Item label="🛍️ Shopping" value="SHOPPING" />
+                      <Picker.Item label="📚 Education" value="EDUCATION" />
+                      <Picker.Item label="📦 Other" value="OTHER" />
+                    </Picker>
+                  </View>
 
-            {/* Month & Year */}
-            <View className="flex-row gap-4 mb-8">
-              <View className="flex-1">
-                <Text className="text-gray-600 font-medium mb-2">Month</Text>
-                <TextInput
-                  value={month}
-                  onChangeText={setMonth}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  placeholder="06"
-                  className="border border-gray-200 rounded-2xl px-4 py-4 text-center text-lg font-medium bg-gray-50"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-gray-600 font-medium mb-2">Year</Text>
-                <TextInput
-                  value={year}
-                  onChangeText={setYear}
-                  keyboardType="numeric"
-                  maxLength={4}
-                  placeholder="2026"
-                  className="border border-gray-200 rounded-2xl px-4 py-4 text-center text-lg font-medium bg-gray-50"
-                />
-              </View>
-            </View>
+                  {/* Amount */}
+                  <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                    Budget Amount
+                  </Text>
+                  <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-3.5 mb-5 border border-gray-100">
+                    <Text className="text-gray-400 text-lg font-poppins-semibold mr-2">
+                      {currency.symbol}
+                    </Text>
+                    <TextInput
+                      value={amount}
+                      onChangeText={setAmount}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      placeholderTextColor="#C4C4CC"
+                      className="flex-1 text-lg font-poppins-semibold text-gray-900"
+                    />
+                  </View>
 
-            {/* Buttons */}
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                className="flex-1 py-4 rounded-2xl bg-gray-100 active:bg-gray-200"
-              >
-                <Text className="text-center font-semibold text-gray-700 text-lg">
-                  Cancel
-                </Text>
+                  {/* Month & Year */}
+                  <View className="flex-row gap-3 mb-7">
+                    <View className="flex-1">
+                      <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                        Month
+                      </Text>
+                      <TextInput
+                        value={month}
+                        onChangeText={setMonth}
+                        keyboardType="numeric"
+                        maxLength={2}
+                        placeholder="06"
+                        placeholderTextColor="#C4C4CC"
+                        className="border border-gray-100 rounded-2xl px-4 py-3.5 text-center text-[15px] font-poppins-medium bg-gray-50 text-gray-900"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                        Year
+                      </Text>
+                      <TextInput
+                        value={year}
+                        onChangeText={setYear}
+                        keyboardType="numeric"
+                        maxLength={4}
+                        placeholder="2026"
+                        placeholderTextColor="#C4C4CC"
+                        className="border border-gray-100 rounded-2xl px-4 py-3.5 text-center text-[15px] font-poppins-medium bg-gray-50 text-gray-900"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Buttons */}
+                  <View className="flex-row gap-3">
+                    <TouchableOpacity
+                      onPress={() => setModalVisible(false)}
+                      className="flex-1 py-4 rounded-2xl bg-gray-100"
+                    >
+                      <Text className="text-center font-poppins-semibold text-gray-600 text-[14px]">
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={handleCreateBudget}
+                      disabled={submitting}
+                      className="flex-1 py-4 rounded-2xl bg-violet-600"
+                      style={{ opacity: submitting ? 0.6 : 1 }}
+                    >
+                      <Text className="text-center font-poppins-semibold text-white text-[14px]">
+                        {submitting ? "Creating..." : "Create Budget"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleCreateBudget}
-                className="flex-1 py-4 rounded-2xl bg-violet-600 active:bg-violet-700"
-              >
-                <Text className="text-center font-semibold text-white text-lg">
-                  Create Budget
-                </Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

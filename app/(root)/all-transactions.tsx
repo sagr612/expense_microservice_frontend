@@ -6,7 +6,9 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
@@ -23,9 +25,7 @@ const AllTransactions = () => {
   const [tempMinAmount, setTempMinAmount] = useState("");
   const [tempMaxAmount, setTempMaxAmount] = useState("");
 
-  // Filter transactions based on search, type, and amount
   const filteredTransactions = transactions.filter((transaction) => {
-    // Search filter - safely handle undefined values
     const matchesSearch =
       (transaction.title?.toLowerCase().includes(searchQuery.toLowerCase()) ??
         false) ||
@@ -36,12 +36,10 @@ const AllTransactions = () => {
       (transaction.note?.toLowerCase().includes(searchQuery.toLowerCase()) ??
         false);
 
-    // Type filter
     const matchesType =
       selectedType === "all" ||
       transaction.type?.toLowerCase() === selectedType.toLowerCase();
 
-    // Amount filter
     const amount = Math.abs(transaction.amount ?? 0);
     const min = minAmount ? parseFloat(minAmount) : 0;
     const max = maxAmount ? parseFloat(maxAmount) : Infinity;
@@ -71,59 +69,80 @@ const AllTransactions = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="rounded-b-3xl overflow-hidden">
+    <View className="flex-1 bg-[#F7F7FB]">
+      {/* Hero Header */}
+      <View className="rounded-b-[36px] overflow-hidden">
         <LinearGradient
-          colors={["#8B5CF6", "#EC4899", "#F97316"]}
+          colors={["#7C3AED", "#A855F7", "#EC4899"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="pt-14 pb-6 px-6"
+          className="pt-14 pb-20 px-6"
         >
-          <View className="flex-row items-center justify-between mb-4">
-            <TouchableOpacity onPress={() => router.back()}>
-              <Icon name="arrow-back" size={24} color="white" />
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 rounded-full bg-white/15 items-center justify-center"
+            >
+              <Icon name="arrow-back" size={20} color="white" />
             </TouchableOpacity>
-            <Text className="text-white text-xl font-poppins-bold">
-              All Transactions
-            </Text>
-            <View className="w-6" />
-          </View>
 
-          {/* Search Bar */}
-          <View className="flex-row items-center bg-white/20 backdrop-blur-lg rounded-xl px-4 py-3">
-            <Icon name="search" size={20} color="white" />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search transactions..."
-              placeholderTextColor="rgba(255,255,255,0.7)"
-              className="flex-1 ml-2 text-white font-poppins"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Icon name="close-circle" size={20} color="white" />
-              </TouchableOpacity>
-            )}
+            <View className="ml-4">
+              <Text className="text-[26px] leading-tight font-poppins-bold text-white">
+                Transactions
+              </Text>
+              <Text className="text-white/60 text-sm mt-0.5 font-poppins">
+                Search and manage your history
+              </Text>
+            </View>
           </View>
         </LinearGradient>
       </View>
 
-      {/* Filter Chips */}
-      <View className="px-6 py-4">
-        <View className="flex-row items-center gap-2">
-          {/* Type Filter Chips */}
+      {/* Floating Search */}
+      <View className="px-6 -mt-8 z-20">
+        <View
+          className="bg-white rounded-[22px] px-5 py-3.5 flex-row items-center"
+          style={{
+            shadowColor: "#1E1B2E",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.08,
+            shadowRadius: 16,
+            elevation: 6,
+          }}
+        >
+          <Icon name="search" size={20} color="#A855F7" />
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search title, category or note..."
+            placeholderTextColor="#B0AFC0"
+            className="flex-1 ml-3 text-[15px] font-poppins text-gray-900"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Icon name="close-circle" size={20} color="#C4C4CC" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Filters */}
+      <View className="px-6 mt-5">
+        <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => setSelectedType("all")}
-            className={`rounded-full px-4 py-2 ${
-              selectedType === "all"
-                ? "bg-purple-100 border-2 border-purple-500"
-                : "bg-white border border-gray-200"
+            className={`px-4 py-2.5 rounded-full mr-2 ${
+              selectedType === "all" ? "bg-violet-600" : "bg-white"
             }`}
+            style={
+              selectedType !== "all"
+                ? { borderWidth: 1, borderColor: "#EDEBF3" }
+                : undefined
+            }
           >
             <Text
-              className={`text-sm font-poppins-bold ${
-                selectedType === "all" ? "text-purple-600" : "text-gray-600"
+              className={`font-poppins-semibold text-[13px] ${
+                selectedType === "all" ? "text-white" : "text-gray-500"
               }`}
             >
               All
@@ -132,112 +151,149 @@ const AllTransactions = () => {
 
           <TouchableOpacity
             onPress={() => setSelectedType("income")}
-            className={`rounded-full px-4 py-2 flex-row items-center gap-1 ${
-              selectedType === "income"
-                ? "bg-green-100 border-2 border-green-500"
-                : "bg-white border border-gray-200"
+            className={`px-4 py-2.5 rounded-full mr-2 ${
+              selectedType === "income" ? "bg-emerald-500" : "bg-white"
             }`}
+            style={
+              selectedType !== "income"
+                ? { borderWidth: 1, borderColor: "#EDEBF3" }
+                : undefined
+            }
           >
-            <Icon
-              name="arrow-down"
-              size={14}
-              color={selectedType === "income" ? "#10B981" : "#6B7280"}
-            />
-            <Text
-              className={`text-sm font-poppins-bold ${
-                selectedType === "income" ? "text-green-600" : "text-gray-600"
-              }`}
-            >
-              Income
-            </Text>
+            <View className="flex-row items-center">
+              <Icon
+                name="arrow-down"
+                size={13}
+                color={selectedType === "income" ? "white" : "#9CA3AF"}
+              />
+              <Text
+                className={`ml-1.5 font-poppins-semibold text-[13px] ${
+                  selectedType === "income" ? "text-white" : "text-gray-500"
+                }`}
+              >
+                Income
+              </Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => setSelectedType("expense")}
-            className={`rounded-full px-4 py-2 flex-row items-center gap-1 ${
-              selectedType === "expense"
-                ? "bg-red-100 border-2 border-red-500"
-                : "bg-white border border-gray-200"
+            className={`px-4 py-2.5 rounded-full ${
+              selectedType === "expense" ? "bg-red-500" : "bg-white"
             }`}
+            style={
+              selectedType !== "expense"
+                ? { borderWidth: 1, borderColor: "#EDEBF3" }
+                : undefined
+            }
           >
-            <Icon
-              name="arrow-up"
-              size={14}
-              color={selectedType === "expense" ? "#EF4444" : "#6B7280"}
-            />
-            <Text
-              className={`text-sm font-poppins-bold ${
-                selectedType === "expense" ? "text-red-600" : "text-gray-600"
-              }`}
-            >
-              Expense
-            </Text>
+            <View className="flex-row items-center">
+              <Icon
+                name="arrow-up"
+                size={13}
+                color={selectedType === "expense" ? "white" : "#9CA3AF"}
+              />
+              <Text
+                className={`ml-1.5 font-poppins-semibold text-[13px] ${
+                  selectedType === "expense" ? "text-white" : "text-gray-500"
+                }`}
+              >
+                Expense
+              </Text>
+            </View>
           </TouchableOpacity>
 
-          {/* Amount Filter Button */}
+          <View className="flex-1" />
+
           <TouchableOpacity
             onPress={() => {
               setTempMinAmount(minAmount);
               setTempMaxAmount(maxAmount);
               setFilterModalVisible(true);
             }}
-            className="ml-auto rounded-full p-2 bg-white border border-gray-200 relative"
           >
-            <Icon name="options-outline" size={20} color="#6B7280" />
-            {activeFiltersCount() > 1 && (
-              <View className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full items-center justify-center">
-                <Text className="text-white text-xs font-poppins-bold">
-                  {activeFiltersCount()}
-                </Text>
-              </View>
-            )}
+            <View
+              className="w-11 h-11 rounded-full bg-white items-center justify-center"
+              style={{
+                shadowColor: "#1E1B2E",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 6,
+                elevation: 2,
+              }}
+            >
+              <Icon name="options-outline" size={19} color="#8B5CF6" />
+              {activeFiltersCount() > 0 && (
+                <View className="absolute -top-1 -right-1 bg-pink-500 w-5 h-5 rounded-full items-center justify-center border-2 border-[#F7F7FB]">
+                  <Text className="text-white text-[10px] font-poppins-bold">
+                    {activeFiltersCount()}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Active Amount Filter Display */}
         {(minAmount || maxAmount) && (
-          <View className="mt-2 flex-row items-center bg-purple-50 rounded-lg px-3 py-2">
-            <Icon name="pricetag" size={14} color="#8B5CF6" />
-            <Text className="text-purple-600 text-xs font-poppins ml-2 flex-1">
-              Amount: ${minAmount || "0"} - ${maxAmount || "∞"}
+          <View className="mt-4 bg-violet-50 rounded-2xl px-4 py-3 flex-row items-center">
+            <Icon name="pricetag" size={16} color="#8B5CF6" />
+            <Text className="ml-2.5 text-violet-700 flex-1 text-[13px] font-poppins-medium">
+              Amount: {minAmount || "0"} – {maxAmount || "No limit"}
             </Text>
             <TouchableOpacity onPress={handleResetFilter}>
-              <Icon name="close-circle" size={16} color="#8B5CF6" />
+              <Icon name="close-circle" size={18} color="#A855F7" />
             </TouchableOpacity>
           </View>
         )}
       </View>
 
-      {/* Results Count */}
-      <View className="px-6 pb-2">
-        <Text className="text-gray-500 text-sm font-poppins">
-          {filteredTransactions.length} transaction
-          {filteredTransactions.length !== 1 ? "s" : ""} found
+      {/* Results count */}
+      <View className="flex-row items-center justify-between mx-6 mt-5 mb-3">
+        <Text className="text-gray-400 text-[13px] font-poppins">
+          {filteredTransactions.length} result
+          {filteredTransactions.length !== 1 ? "s" : ""}
         </Text>
       </View>
 
-      {/* Transactions List */}
-      <View className="flex-1 px-6">
-        {filteredTransactions.length > 0 ? (
-          <FlatList
-            data={filteredTransactions}
-            renderItem={({ item }) => <TransactionItem item={item} />}
-            keyExtractor={(item) => item.externalId!}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
-          />
-        ) : (
-          <View className="flex-1 items-center justify-center">
-            <Icon name="search-outline" size={64} color="#D1D5DB" />
-            <Text className="text-gray-400 text-base font-poppins-bold mt-4">
-              No transactions found
-            </Text>
-            <Text className="text-gray-400 text-sm font-poppins mt-1">
-              Try adjusting your filters
-            </Text>
+      {filteredTransactions.length > 0 ? (
+        <FlatList
+          data={filteredTransactions}
+          renderItem={({ item }) => (
+            <View className="mb-3 px-6">
+              <TransactionItem item={item} />
+            </View>
+          )}
+          keyExtractor={(item) => item.externalId!}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        />
+      ) : (
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-24 h-24 rounded-full bg-violet-50 items-center justify-center">
+            <Icon name="search-outline" size={44} color="#A855F7" />
           </View>
-        )}
-      </View>
+          <Text className="text-xl font-poppins-bold text-gray-900 mt-6">
+            Nothing found
+          </Text>
+          <Text className="text-center text-gray-400 text-[14px] mt-2 leading-6 font-poppins">
+            Try different keywords or clear your filters to see more results.
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setSearchQuery("");
+              setSelectedType("all");
+              handleResetFilter();
+            }}
+            className="mt-6"
+          >
+            <View className="rounded-full px-6 py-3 bg-violet-600">
+              <Text className="text-white font-poppins-semibold text-[13px]">
+                Clear filters
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Filter Modal */}
       <Modal
@@ -246,74 +302,95 @@ const AllTransactions = () => {
         animationType="slide"
         onRequestClose={() => setFilterModalVisible(false)}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6">
-            <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-gray-800 text-xl font-poppins-bold">
-                Filter by Amount
-              </Text>
-              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                <Icon name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setFilterModalVisible(false)}
+          >
+            <View className="flex-1 justify-end bg-black/45">
+              <TouchableOpacity activeOpacity={1}>
+                <View className="bg-white rounded-t-[32px] px-6 pt-3 pb-8">
+                  <View className="items-center mb-6">
+                    <View className="w-10 h-1 rounded-full bg-gray-200" />
+                  </View>
 
-            {/* Min Amount */}
-            <Text className="text-gray-500 text-xs font-poppins mb-2">
-              Minimum Amount
-            </Text>
-            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-3 mb-4">
-              <Text className="text-gray-400 text-lg mr-2">$</Text>
-              <TextInput
-                value={tempMinAmount}
-                onChangeText={setTempMinAmount}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                className="flex-1 text-gray-800 text-base font-poppins"
-              />
-            </View>
+                  <View className="flex-row items-center justify-between mb-6">
+                    <View>
+                      <Text className="text-xl font-poppins-bold text-gray-900">
+                        Amount range
+                      </Text>
+                      <Text className="text-gray-400 text-[13px] mt-0.5 font-poppins">
+                        Filter transactions by amount
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setFilterModalVisible(false)}
+                    >
+                      <Icon name="close" size={22} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
 
-            {/* Max Amount */}
-            <Text className="text-gray-500 text-xs font-poppins mb-2">
-              Maximum Amount
-            </Text>
-            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-3 mb-6">
-              <Text className="text-gray-400 text-lg mr-2">$</Text>
-              <TextInput
-                value={tempMaxAmount}
-                onChangeText={setTempMaxAmount}
-                placeholder="No limit"
-                keyboardType="decimal-pad"
-                className="flex-1 text-gray-800 text-base font-poppins"
-              />
-            </View>
-
-            {/* Buttons */}
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={() => {
-                  handleResetFilter();
-                  setFilterModalVisible(false);
-                }}
-                className="flex-1 bg-gray-100 rounded-xl py-4 items-center"
-              >
-                <Text className="text-gray-600 font-poppins-bold">Reset</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleApplyFilter}
-                className="flex-1 rounded-xl overflow-hidden"
-              >
-                <LinearGradient
-                  colors={["#8B5CF6", "#EC4899"]}
-                  className="py-4 items-center"
-                >
-                  <Text className="text-white font-poppins-bold">
-                    Apply Filter
+                  <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                    From
                   </Text>
-                </LinearGradient>
+                  <View className="bg-gray-50 rounded-2xl px-4 py-3.5 flex-row items-center mb-4 border border-gray-100">
+                    <Text className="text-lg text-gray-400 mr-2">₹</Text>
+                    <TextInput
+                      value={tempMinAmount}
+                      onChangeText={setTempMinAmount}
+                      keyboardType="decimal-pad"
+                      placeholder="0.00"
+                      placeholderTextColor="#C4C4CC"
+                      className="flex-1 text-base font-poppins text-gray-900"
+                    />
+                  </View>
+
+                  <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2">
+                    To
+                  </Text>
+                  <View className="bg-gray-50 rounded-2xl px-4 py-3.5 flex-row items-center border border-gray-100">
+                    <Text className="text-lg text-gray-400 mr-2">₹</Text>
+                    <TextInput
+                      value={tempMaxAmount}
+                      onChangeText={setTempMaxAmount}
+                      keyboardType="decimal-pad"
+                      placeholder="No limit"
+                      placeholderTextColor="#C4C4CC"
+                      className="flex-1 text-base font-poppins text-gray-900"
+                    />
+                  </View>
+
+                  <View className="flex-row mt-8">
+                    <TouchableOpacity
+                      onPress={() => {
+                        handleResetFilter();
+                        setFilterModalVisible(false);
+                      }}
+                      className="flex-1 mr-3 bg-gray-100 rounded-2xl py-4 items-center"
+                    >
+                      <Text className="font-poppins-semibold text-gray-600 text-[14px]">
+                        Reset
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      className="flex-1 bg-violet-600 rounded-2xl py-4 items-center"
+                      onPress={handleApplyFilter}
+                    >
+                      <Text className="text-white font-poppins-bold text-[14px]">
+                        Apply filter
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

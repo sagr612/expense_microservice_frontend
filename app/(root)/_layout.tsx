@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -6,35 +7,74 @@ import { Redirect, Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 
+type TabIconProps = {
+  name: React.ComponentProps<typeof Icon>["name"];
+  activeName: React.ComponentProps<typeof Icon>["name"];
+  color: string;
+  focused: boolean;
+};
+
+const TabIcon = ({ name, activeName, color, focused }: TabIconProps) => {
+  if (!focused) {
+    return (
+      <View className="w-11 h-11 items-center justify-center">
+        <Icon name={name} size={22} color={color} />
+      </View>
+    );
+  }
+
+  return (
+    <View className="w-11 h-11 rounded-2xl overflow-hidden">
+      <LinearGradient
+        colors={["#7C3AED", "#EC4899"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="w-full h-full items-center justify-center"
+      >
+        <Icon name={activeName} size={20} color="white" />
+      </LinearGradient>
+    </View>
+  );
+};
+
 const MainAppLayout = () => {
   const { user } = useAuth();
+
+  // Hooks must run unconditionally, before any early return.
+  const { expoPushToken, notification } = usePushNotifications();
+  const { unreadCount } = useNotifications();
+
   if (!user) {
     return <Redirect href="/(auth)/login" />;
   }
-  const { expoPushToken, notification } = usePushNotifications();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#EC4899",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: "#7C3AED",
+        tabBarInactiveTintColor: "#B0AFC0",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          shadowColor: "#000",
-          shadowOffset: { height: -5, width: 0 },
-          height: 70,
+          height: 68,
           paddingBottom: 10,
-          paddingTop: 10,
+          paddingTop: 8,
+          shadowColor: "#1E1B2E",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: "Poppins-SemiBold",
-          marginTop: 4,
+          marginTop: 2,
+        },
+        tabBarBadgeStyle: {
+          backgroundColor: "#EC4899",
+          fontFamily: "Poppins-SemiBold",
+          fontSize: 10,
         },
       }}
     >
@@ -43,24 +83,12 @@ const MainAppLayout = () => {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="home" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="home-outline" size={24} color={color} />
-              )}
-            </View>
+            <TabIcon
+              name="home-outline"
+              activeName="home"
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -68,26 +96,14 @@ const MainAppLayout = () => {
       <Tabs.Screen
         name="all-transactions"
         options={{
-          title: "Transactions",
+          title: "History",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="list" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="list-outline" size={24} color={color} />
-              )}
-            </View>
+            <TabIcon
+              name="list-outline"
+              activeName="list"
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -97,51 +113,12 @@ const MainAppLayout = () => {
         options={{
           title: "Add",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="add" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="add-outline" size={24} color={color} />
-              )}
-            </View>
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Settings",
-          tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="settings" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="settings-outline" size={24} color={color} />
-              )}
-            </View>
+            <TabIcon
+              name="add-circle-outline"
+              activeName="add-circle"
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -151,24 +128,12 @@ const MainAppLayout = () => {
         options={{
           title: "Analytics",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="pie-chart" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="pie-chart-outline" size={24} color={color} />
-              )}
-            </View>
+            <TabIcon
+              name="pie-chart-outline"
+              activeName="pie-chart"
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -178,24 +143,43 @@ const MainAppLayout = () => {
         options={{
           title: "Budget",
           tabBarIcon: ({ color, focused }) => (
-            <View
-              className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                focused ? "" : ""
-              }`}
-            >
-              {focused ? (
-                <View className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <LinearGradient
-                    colors={["#8B5CF6", "#EC4899"]}
-                    className="w-full h-full items-center justify-center"
-                  >
-                    <Icon name="wallet" size={24} color="white" />
-                  </LinearGradient>
-                </View>
-              ) : (
-                <Icon name="wallet-outline" size={24} color={color} />
-              )}
-            </View>
+            <TabIcon
+              name="wallet-outline"
+              activeName="wallet"
+              color={color}
+              focused={focused}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Alerts",
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="notifications-outline"
+              activeName="notifications"
+              color={color}
+              focused={focused}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              name="settings-outline"
+              activeName="settings"
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />

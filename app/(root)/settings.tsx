@@ -14,20 +14,19 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { changePassword } from "../services/authService";
 
 const Settings = () => {
   const { user: authUser, userId, logout, changeUsername } = useAuth();
   const { user, getUser, isLoading, uploadAvatar, createUpdateUser } =
     useUser();
-  // const { currency, setCurrency } = useCurrency();
   const { currency, setCurrency } = useSharedCurrency();
 
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
@@ -45,28 +44,26 @@ const Settings = () => {
   const [currencyModal, setCurrencyModal] = useState(false);
 
   const handleChangeAvatar = async () => {
-    // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library.",
-      );
+      Toast.show({
+        type: "info",
+        text1: "Permission Required",
+        text2: "Please allow access to your photo library.",
+      });
       return;
     }
 
-    // Launch picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // force square crop
+      aspect: [1, 1],
       quality: 0.8,
     });
 
     if (result.canceled) return;
     console.log("Result : ", result);
     const uri = result.assets[0].uri;
-
     const filename = uri.split("/").pop() ?? "avatar.jpg";
 
     const formData = new FormData();
@@ -79,14 +76,20 @@ const Settings = () => {
     try {
       setUploading(true);
       console.log("Uploading avatar...");
-
-      // Refresh user so profile pic updates everywhere
       await uploadAvatar(userId!, formData);
       if (userId) await getUser(userId);
       setAvatarModal(false);
-      Alert.alert("Success", "Profile picture updated!");
+      Toast.show({
+        type: "success",
+        text1: "Profile Picture Updated",
+        text2: "Your profile picture has been updated successfully.",
+      });
     } catch (err: any) {
-      Alert.alert("Error", err.message ?? "Upload failed");
+      Toast.show({
+        type: "error",
+        text1: "Upload Failed",
+        text2: err.message ?? "Upload failed",
+      });
     } finally {
       setUploading(false);
     }
@@ -102,14 +105,26 @@ const Settings = () => {
     setUsernameModalVisible(false);
     try {
       if (!newUsername || !authUser) {
-        console.error("New Username not initialized.");
+        Toast.show({
+          type: "error",
+          text1: "Username Change Failed",
+          text2: "New username not initialized.",
+        });
         return;
       }
       await changeUsername(newUsername, authUser);
-      Alert.alert("Success", "Username changed");
+      Toast.show({
+        type: "success",
+        text1: "Username Changed",
+        text2: "Your username has been changed successfully.",
+      });
     } catch (err: any) {
       console.error("Username change failed:", err.message);
-      Alert.alert("Error", err.message);
+      Toast.show({
+        type: "error",
+        text1: "Username Change Failed",
+        text2: err.message ?? "Username change failed.",
+      });
     }
     setNewUsername("");
   };
@@ -122,17 +137,30 @@ const Settings = () => {
           newPassword: newPassword,
         });
         console.log("Password changed successfully");
-        Alert.alert("Success", "Password changed");
+        Toast.show({
+          type: "success",
+          text1: "Password Changed",
+          text2: "Your password has been changed successfully.",
+        });
         setPasswordModalVisible(false);
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } catch (err: any) {
         console.error("Password change failed:", err.message);
-        Alert.alert("Error", err.message);
+        Toast.show({
+          type: "error",
+          text1: "Password Change Failed",
+          text2: err.message ?? "Password change failed.",
+        });
       }
     } else {
       console.log("Passwords don't match or current password is empty");
+      Toast.show({
+        type: "error",
+        text1: "Password Change Failed",
+        text2: "Passwords don't match or current password is empty.",
+      });
     }
   };
 
@@ -158,25 +186,37 @@ const Settings = () => {
         };
 
         await createUpdateUser(reqpayload);
-
-        Alert.alert("Success", "Name updated");
+        Toast.show({
+          type: "success",
+          text1: "Name Updated",
+          text2: "Your name has been updated successfully.",
+        });
         getUser(userId!);
         setNameModal(false);
         setFirstName("");
         setLastName("");
       } catch (err: any) {
         console.error("Name change failed:", err.message);
-        Alert.alert("Error", err.message);
+        Toast.show({
+          type: "error",
+          text1: "Name Change Failed",
+          text2: err.message ?? "Name change failed.",
+        });
       }
     } else {
       console.log("No changes made to name");
+      Toast.show({
+        type: "info",
+        text1: "No Changes Made",
+        text2: "No changes were made to your name.",
+      });
     }
   };
 
   const settingsOptions: SettingsSection[] = [
     {
       id: "profile",
-      title: "Profile Settings",
+      title: "Profile",
       items: [
         {
           id: "edit-name",
@@ -187,7 +227,6 @@ const Settings = () => {
             : "",
           onPress: () => setNameModal(true),
         },
-
         {
           id: "edit-avatar",
           icon: "image-outline",
@@ -233,60 +272,90 @@ const Settings = () => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView
+      className="flex-1 bg-[#F7F7FB]"
+      showsVerticalScrollIndicator={false}
+    >
       {isLoading && !user ? (
-        <View className="flex-1 justify-center items-center h-screen">
+        <View
+          className="flex-1 justify-center items-center"
+          style={{ height: 500 }}
+        >
           <ActivityIndicator size="large" color="#8B5CF6" />
         </View>
       ) : (
         <>
           {/* Header */}
-          <View className="rounded-b-3xl overflow-hidden">
+          <View className="rounded-b-[36px] overflow-hidden">
             <LinearGradient
-              colors={["#8B5CF6", "#EC4899", "#F97316"]}
+              colors={["#7C3AED", "#A855F7", "#EC4899"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              className="pt-14 pb-10 px-6"
+              className="pt-14 pb-16 px-6"
             >
               <View className="flex-row items-center justify-between">
                 <View>
-                  <Text className="text-white/80 text-sm font-poppins">
+                  <Text className="text-white/60 text-[13px] font-poppins">
                     Account
                   </Text>
-                  <Text className="text-white text-3xl font-poppins-bold mt-1">
+                  <Text className="text-white text-[26px] font-poppins-bold mt-0.5">
                     Settings
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => router.back()}>
-                  <Icon name="close" size={28} color="white" />
+                  <View className="w-10 h-10 rounded-full bg-white/15 items-center justify-center">
+                    <Icon name="close" size={20} color="white" />
+                  </View>
                 </TouchableOpacity>
               </View>
             </LinearGradient>
           </View>
 
           {/* Profile Card */}
-          <View className="px-6 -mt-8 mb-6">
-            <View className="bg-white rounded-2xl p-6 shadow-lg items-center">
-              <View className="relative">
-                <Image
-                  source={{
-                    uri:
-                      user?.profile_pic ?? "https://i.pravatar.cc/150?img=12",
-                  }}
-                  className="w-24 h-24 rounded-full border-4 border-purple-100"
-                />
-              </View>
-              <Text className="text-gray-800 text-xl font-poppins-bold mt-4">
+          <View className="px-6 -mt-10 mb-6">
+            <View
+              className="bg-white rounded-[28px] p-6 items-center"
+              style={{
+                shadowColor: "#1E1B2E",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.08,
+                shadowRadius: 18,
+                elevation: 6,
+              }}
+            >
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => setAvatarModal(true)}
+              >
+                <View className="relative">
+                  <Image
+                    source={{
+                      uri:
+                        user?.profile_pic ?? "https://i.pravatar.cc/150?img=12",
+                    }}
+                    className="w-24 h-24 rounded-full"
+                    style={{ borderWidth: 3, borderColor: "#F3E8FF" }}
+                  />
+                  <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-violet-600 items-center justify-center border-2 border-white">
+                    <Icon name="camera" size={14} color="white" />
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              <Text className="text-gray-900 text-xl font-poppins-bold mt-4">
                 {user
                   ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
                   : authUser}
               </Text>
-              <Text className="text-gray-500 text-sm font-poppins mt-1">
+              <Text className="text-gray-400 text-[13px] font-poppins mt-1">
                 {user?.email ?? authUser}
               </Text>
-              <Text className="text-gray-500 text-sm font-poppins mt-1">
-                {authUser}
-              </Text>
+
+              <View className="mt-3 bg-violet-50 rounded-full px-3 py-1">
+                <Text className="text-violet-600 text-[12px] font-poppins-semibold">
+                  @{authUser}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -294,32 +363,45 @@ const Settings = () => {
           <View className="px-6">
             {settingsOptions.map((section) => (
               <View key={section.id} className="mb-6">
-                <Text className="text-gray-500 text-xs font-poppins-bold uppercase mb-3 px-2">
+                <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide mb-2.5 px-1">
                   {section.title}
                 </Text>
-                <View className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <View
+                  className="bg-white rounded-[24px] overflow-hidden"
+                  style={{
+                    shadowColor: "#1E1B2E",
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 8,
+                    elevation: 2,
+                  }}
+                >
                   {section.items.map((item, index) => (
                     <TouchableOpacity
                       key={item.id}
+                      activeOpacity={0.7}
                       onPress={item.onPress}
-                      className={`flex-row items-center p-4 ${
+                      className={`flex-row items-center px-4 py-4 ${
                         index !== section.items.length - 1
                           ? "border-b border-gray-100"
                           : ""
                       }`}
                     >
-                      <View className="w-10 h-10 bg-purple-50 rounded-full items-center justify-center">
-                        <Icon name={item.icon} size={20} color="#8B5CF6" />
+                      <View className="w-10 h-10 bg-violet-50 rounded-full items-center justify-center">
+                        <Icon name={item.icon} size={18} color="#8B5CF6" />
                       </View>
                       <View className="flex-1 ml-3">
-                        <Text className="text-gray-800 font-poppins-bold text-sm">
+                        <Text className="text-gray-900 font-poppins-semibold text-[14px]">
                           {item.label}
                         </Text>
-                        <Text className="text-gray-500 font-poppins text-xs mt-0.5">
+                        <Text
+                          numberOfLines={1}
+                          className="text-gray-400 font-poppins text-[12px] mt-0.5"
+                        >
                           {item.value}
                         </Text>
                       </View>
-                      <Icon name="chevron-forward" size={20} color="#D1D5DB" />
+                      <Icon name="chevron-forward" size={18} color="#D8D6E3" />
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -327,13 +409,26 @@ const Settings = () => {
             ))}
 
             {/* Logout Button */}
-            <TouchableOpacity onPress={handleLogout} className="mb-8">
-              <View className="bg-white rounded-2xl shadow-sm p-4 flex-row items-center">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleLogout}
+              className="mb-8"
+            >
+              <View
+                className="bg-white rounded-[24px] p-4 flex-row items-center"
+                style={{
+                  shadowColor: "#1E1B2E",
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.04,
+                  shadowRadius: 8,
+                  elevation: 2,
+                }}
+              >
                 <View className="w-10 h-10 bg-red-50 rounded-full items-center justify-center">
-                  <Icon name="log-out-outline" size={20} color="#EF4444" />
+                  <Icon name="log-out-outline" size={18} color="#EF4444" />
                 </View>
-                <Text className="text-red-500 font-poppins-bold text-sm ml-3">
-                  Logout
+                <Text className="text-red-500 font-poppins-semibold text-[14px] ml-3">
+                  Log out
                 </Text>
               </View>
             </TouchableOpacity>
@@ -369,7 +464,6 @@ const Settings = () => {
             onSave={handleChangeName}
           />
 
-          {/* Avatar Modal */}
           <AvatarModel
             visible={avatarModal}
             avatarUri={user?.profile_pic}
@@ -377,6 +471,7 @@ const Settings = () => {
             onChooseFromLibrary={handleChangeAvatar}
             onClose={() => setAvatarModal(false)}
           />
+
           <CurrencyPickerModal
             visible={currencyModal}
             selected={currency}
@@ -388,4 +483,5 @@ const Settings = () => {
     </ScrollView>
   );
 };
+
 export default Settings;

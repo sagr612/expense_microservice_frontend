@@ -21,3 +21,29 @@ export const registerPushToken = async (expoToken: string) => {
   console.log("Push token registered successfully:", response.data);
   return response.data;
 };
+
+export const getNotifications = async () => {
+  const response = await expenseApi.get("/api/v1/notifications", {
+    headers: await getAuthHeaders(),
+  });
+
+  return response.data;
+};
+
+export const markAsRead = async (id: string) => {
+  await expenseApi.patch(
+    `/api/v1/notifications/${id}/read`,
+    {},
+    {
+      headers: await getAuthHeaders(),
+    },
+  );
+};
+
+export const getUnreadCount = async () => {
+  const response = await expenseApi.get("/api/v1/notifications/unread-count", {
+    headers: await getAuthHeaders(),
+  });
+
+  return response.data;
+};

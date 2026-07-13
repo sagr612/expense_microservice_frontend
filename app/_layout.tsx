@@ -26,6 +26,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { AuthProvider } from "@/context/AuthContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import { TransactionProvider } from "@/context/TransactionContext";
 import { UserProvider } from "@/context/UserContext";
 import Toast from "react-native-toast-message";
@@ -85,15 +86,17 @@ export default function RootLayout() {
           <AuthProvider>
             <TransactionProvider>
               <CurrencyProvider>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                  }}
-                >
-                  <Stack.Screen name="(root)" />
-                  <Stack.Screen name="(auth)" />
-                </Stack>
-                <Toast />
+                <NotificationProvider>
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                    }}
+                  >
+                    <Stack.Screen name="(root)" />
+                    <Stack.Screen name="(auth)" />
+                  </Stack>
+                  <Toast />
+                </NotificationProvider>
               </CurrencyProvider>
             </TransactionProvider>
           </AuthProvider>

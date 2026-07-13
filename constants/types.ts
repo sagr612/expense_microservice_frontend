@@ -96,3 +96,44 @@ export const getCategoryColor = (category: string) => {
   };
   return colorMap[category] || "#6B7280";
 };
+
+export type NotificationType =
+  | "BUDGET_WARNING"
+  | "BUDGET_EXCEEDED"
+  | "EXPENSE_CREATED"
+  | "LARGE_EXPENSE"
+  | "AI_INSIGHT"
+  | "SALARY"
+  | "GENERAL";
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  type: NotificationType;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export const notificationColors: Record<NotificationType, string> = {
+  BUDGET_WARNING: "#F59E0B",
+  BUDGET_EXCEEDED: "#EF4444",
+  EXPENSE_CREATED: "#8B5CF6",
+  LARGE_EXPENSE: "#EC4899",
+  AI_INSIGHT: "#3B82F6",
+  SALARY: "#10B981",
+  GENERAL: "#6B7280",
+};
+
+export const notificationIcons: Record<
+  NotificationType,
+  React.ComponentProps<typeof Icon>["name"]
+> = {
+  BUDGET_WARNING: "warning",
+  BUDGET_EXCEEDED: "alert-circle",
+  EXPENSE_CREATED: "wallet",
+  LARGE_EXPENSE: "cash",
+  AI_INSIGHT: "sparkles",
+  SALARY: "trending-up",
+  GENERAL: "notifications",
+};

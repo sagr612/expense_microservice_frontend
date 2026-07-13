@@ -1,3 +1,5 @@
+import Icon from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -6,9 +8,10 @@ import {
   Text,
   View,
 } from "react-native";
+import { LineChart, PieChart } from "react-native-chart-kit";
 
 import { useAuth } from "@/context/AuthContext";
-import { LineChart, PieChart } from "react-native-chart-kit";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   getCategoryAnalytics,
   getMonthlyAnalytics,
@@ -30,11 +33,19 @@ type MonthlyItem = {
   totalAmount: number;
 };
 
+const cardShadow = {
+  shadowColor: "#1E1B2E",
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.05,
+  shadowRadius: 14,
+  elevation: 3,
+};
+
 export default function AnalyticsScreen() {
   const { userId } = useAuth();
+  const { currency } = useCurrency();
 
   const [loading, setLoading] = useState(true);
-
   const [categoryData, setCategoryData] = useState<PieItem[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyItem[]>([]);
 
@@ -71,7 +82,6 @@ export default function AnalyticsScreen() {
       );
 
       pieData.sort((a, b) => b.amount - a.amount);
-      console.log(JSON.stringify(pieData, null, 2));
       setCategoryData(pieData);
       setMonthlyData(monthly);
     } catch (error) {
@@ -88,9 +98,15 @@ export default function AnalyticsScreen() {
       ? Math.max(...categoryData.map((item) => item.amount))
       : 1;
 
+  const formatAmount = (value: number) =>
+    `${currency.symbol}${value.toLocaleString("en-IN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-[#F7F7FB]">
         <ActivityIndicator size="large" color="#8B5CF6" />
       </View>
     );
@@ -98,34 +114,56 @@ export default function AnalyticsScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      className="flex-1 bg-[#F7F7FB]"
       contentContainerStyle={{ paddingBottom: 80 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View className="px-6 pt-10 pb-8 bg-white">
-        <Text className="text-4xl font-bold text-gray-900 tracking-tight">
-          Analytics
-        </Text>
-        <Text className="text-gray-500 mt-1 text-lg">
-          Spending insights & trends
-        </Text>
+      <View className="rounded-b-[36px] overflow-hidden">
+        <LinearGradient
+          colors={["#7C3AED", "#A855F7", "#EC4899"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="pt-14 pb-20 px-6"
+        >
+          <Text className="text-white/60 text-[13px] font-poppins">
+            Overview
+          </Text>
+          <Text className="text-white text-[28px] font-poppins-bold mt-0.5">
+            Analytics
+          </Text>
+          <Text className="text-white/70 text-[14px] mt-1 font-poppins">
+            Spending insights & trends
+          </Text>
+        </LinearGradient>
       </View>
 
       {/* Total Expense Card */}
-      <View className="mx-4 -mt-4 bg-white rounded-3xl p-8 shadow-xl shadow-purple-500/10 border border-gray-100">
-        <Text className="text-gray-500 text-sm font-medium tracking-widest">
-          TOTAL EXPENSES
-        </Text>
-        <Text className="text-5xl font-bold text-gray-900 mt-3">
-          ₹{totalExpense.toLocaleString()}
-        </Text>
-        <View className="h-1.5 w-16 bg-purple-500 rounded-full mt-4" />
+      <View className="px-6 -mt-12">
+        <View className="bg-white rounded-[28px] p-6" style={cardShadow}>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-gray-400 text-xs font-poppins-semibold uppercase tracking-wide">
+              Total Expenses
+            </Text>
+            <View className="w-9 h-9 rounded-full bg-violet-50 items-center justify-center">
+              <Icon name="stats-chart" size={16} color="#8B5CF6" />
+            </View>
+          </View>
+
+          <Text className="text-4xl font-poppins-bold text-gray-900 mt-2.5">
+            {formatAmount(totalExpense)}
+          </Text>
+
+          <View className="h-1.5 w-14 bg-violet-500 rounded-full mt-4" />
+        </View>
       </View>
 
       {/* Category Analytics */}
-      <View className="bg-white mx-4 mt-8 rounded-3xl p-6 shadow-sm border border-gray-100">
-        <Text className="text-2xl font-semibold text-gray-900 mb-6">
+      <View
+        className="bg-white mx-6 mt-6 rounded-[28px] p-6"
+        style={cardShadow}
+      >
+        <Text className="text-lg font-poppins-bold text-gray-900 mb-5">
           Expenses by Category
         </Text>
 
@@ -136,7 +174,7 @@ export default function AnalyticsScreen() {
               <PieChart
                 data={categoryData}
                 width={screenWidth - 48}
-                height={240}
+                height={220}
                 accessor="amount"
                 backgroundColor="transparent"
                 paddingLeft="15"
@@ -149,7 +187,7 @@ export default function AnalyticsScreen() {
             </View>
 
             {/* Custom Legend */}
-            <View className="mt-6 space-y-4">
+            <View className="mt-5" style={{ gap: 8 }}>
               {categoryData.map((item) => (
                 <View
                   key={item.name}
@@ -158,41 +196,44 @@ export default function AnalyticsScreen() {
                   <View className="flex-row items-center flex-1">
                     <View
                       style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: 7,
+                        width: 10,
+                        height: 10,
+                        borderRadius: 5,
                         backgroundColor: item.color,
                       }}
                     />
-                    <Text className="ml-3 text-base font-medium text-gray-800">
+                    <Text
+                      numberOfLines={1}
+                      className="ml-3 text-[14px] font-poppins-medium text-gray-700 flex-1"
+                    >
                       {item.name}
                     </Text>
                   </View>
 
-                  <Text className="font-semibold text-gray-900 text-base">
-                    ₹{item.amount.toLocaleString()}
+                  <Text className="font-poppins-semibold text-gray-900 text-[14px] ml-2">
+                    {formatAmount(item.amount)}
                   </Text>
                 </View>
               ))}
             </View>
 
             {/* Progress Bars */}
-            <View className="mt-8">
-              <Text className="text-lg font-semibold text-gray-900 mb-4">
+            <View className="mt-7">
+              <Text className="text-sm font-poppins-semibold text-gray-900 mb-4">
                 Breakdown
               </Text>
               {categoryData.map((item) => (
-                <View key={item.name} className="mb-6">
+                <View key={item.name} className="mb-5">
                   <View className="flex-row justify-between items-center mb-2">
-                    <Text className="font-medium text-gray-700">
+                    <Text className="font-poppins-medium text-gray-500 text-[13px]">
                       {item.name}
                     </Text>
-                    <Text className="font-semibold text-gray-900">
+                    <Text className="font-poppins-semibold text-gray-900 text-[13px]">
                       {((item.amount / totalExpense) * 100).toFixed(1)}%
                     </Text>
                   </View>
 
-                  <View className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <View className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <View
                       style={{
                         width: `${(item.amount / maxAmount) * 100}%`,
@@ -207,15 +248,23 @@ export default function AnalyticsScreen() {
             </View>
           </>
         ) : (
-          <Text className="text-gray-500 py-12 text-center">
-            No category data available yet.
-          </Text>
+          <View className="items-center py-10">
+            <View className="w-20 h-20 rounded-full bg-violet-50 items-center justify-center">
+              <Icon name="pie-chart-outline" size={36} color="#A855F7" />
+            </View>
+            <Text className="text-gray-400 text-[14px] font-poppins mt-4 text-center px-6">
+              No category data available yet.
+            </Text>
+          </View>
         )}
       </View>
 
       {/* Monthly Trend */}
-      <View className="bg-white mx-4 mt-8 rounded-3xl p-6 shadow-sm border border-gray-100 mb-8">
-        <Text className="text-2xl font-semibold text-gray-900 mb-6">
+      <View
+        className="bg-white mx-6 mt-6 rounded-[28px] p-6"
+        style={cardShadow}
+      >
+        <Text className="text-lg font-poppins-bold text-gray-900 mb-5">
           Monthly Spending Trend
         </Text>
 
@@ -230,33 +279,36 @@ export default function AnalyticsScreen() {
               ],
             }}
             width={screenWidth - 48}
-            height={260}
+            height={240}
             bezier
             chartConfig={{
               backgroundGradientFrom: "#ffffff",
               backgroundGradientTo: "#ffffff",
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(139, 92, 246, ${opacity})`,
-              labelColor: () => "#6B7280",
+              labelColor: () => "#9CA3AF",
               propsForDots: {
-                r: "6",
+                r: "5",
                 strokeWidth: "2",
                 stroke: "#fff",
               },
               propsForBackgroundLines: {
-                stroke: "#E5E7EB",
+                stroke: "#F0EFF5",
               },
             }}
             style={{
               borderRadius: 16,
-              marginVertical: 8,
+              marginVertical: 4,
+              marginLeft: -16,
             }}
           />
         ) : (
-          <View className="py-16 items-center bg-gray-50 rounded-2xl">
-            <Text className="text-gray-400 text-center text-base px-6">
-              Add expenses across multiple months{"\n"}to see your spending
-              trend
+          <View className="items-center py-10 bg-gray-50 rounded-2xl">
+            <View className="w-20 h-20 rounded-full bg-violet-50 items-center justify-center">
+              <Icon name="trending-up-outline" size={36} color="#A855F7" />
+            </View>
+            <Text className="text-gray-400 text-center text-[14px] font-poppins mt-4 px-6">
+              Add expenses across multiple months to see your spending trend.
             </Text>
           </View>
         )}

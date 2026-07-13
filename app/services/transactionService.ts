@@ -272,6 +272,6 @@ export const createBudget = async (budget: BudgetDto): Promise<BudgetDto> => {
       headers: await getAuthHeaders(),
     },
   );
-
+  console.log("Successfully created budget:", response.data);
   return response.data;
 };
