@@ -12,7 +12,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const deleteUser = async (userId: string) => {
     try {
       console.log("Deleting user ", userId, "......");
-      const response = await userApi.delete(`/api/v1/users/${userId}`);
+      const response = await userService.deleteUser(userId);
 
       console.log(response);
       console.log("User deleted successfully.");
@@ -58,11 +58,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Uploading avatar for user ", userId, "......");
       await userService.uploadAvatar(userId, formData);
 
-      
-
       console.log("Avatar uploaded successfully.");
     } catch (err) {
-      console.error("Error while uploading avatar  dd", err);
+      console.error("Error while uploading avatar", err);
+      throw err;
     } finally {
       setIsLoading(false);
     }

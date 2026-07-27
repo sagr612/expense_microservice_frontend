@@ -22,7 +22,10 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "package": "com.expense_tracker",
-      "permissions": ["RECEIVE_SMS", "READ_SMS"]
+      "permissions": [
+        "RECEIVE_SMS",
+        "READ_SMS"
+      ]
     },
     "web": {
       "output": "static",
@@ -50,7 +53,8 @@
           "defaultChannel": "default"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

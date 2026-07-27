@@ -1,6 +1,6 @@
 import { userApi } from "@/app/services/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UserInfoDto } from "@/interfaces/UserTypes";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const getUser = async (userId: string): Promise<UserInfoDto> => {
   const token = await AsyncStorage.getItem("accessToken");
@@ -44,15 +44,25 @@ export const uploadAvatar = async (
 ): Promise<void> => {
   const token = await AsyncStorage.getItem("accessToken");
 
-  await userApi.patch(
-    `/api/v1/users/${userId}/profile-image`,
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+  try {
+    const response = await userApi.patch(
+      `/api/v1/users/${userId}/profile-image`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+        timeout: 60000,
       },
-      timeout: 60000,
-    }
-  );
+    );
+
+    console.log("resp", response);
+  } catch (error: any) {
+    console.log(
+      "Avatar upload request failed:",
+      error?.response?.data ?? error,
+    );
+    throw error;
+  }
 };
