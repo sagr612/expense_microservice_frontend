@@ -1,8 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 import { expenseApi } from "./api";
+import * as SecureStore from "expo-secure-store";
 
 const getAuthHeaders = async () => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   return {
     Authorization: `Bearer ${token}`,

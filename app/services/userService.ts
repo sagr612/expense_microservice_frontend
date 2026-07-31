@@ -1,9 +1,9 @@
 import { userApi } from "@/app/services/api";
 import { UserInfoDto } from "@/interfaces/UserTypes";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 export const getUser = async (userId: string): Promise<UserInfoDto> => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   const response = await userApi.get(`/api/v1/users/${userId}`, {
     headers: {
@@ -15,7 +15,7 @@ export const getUser = async (userId: string): Promise<UserInfoDto> => {
 };
 
 export const deleteUser = async (userId: string): Promise<void> => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   await userApi.delete(`/api/v1/users/${userId}`, {
     headers: {
@@ -27,7 +27,7 @@ export const deleteUser = async (userId: string): Promise<void> => {
 export const createUpdateUser = async (
   userInfo: UserInfoDto,
 ): Promise<UserInfoDto> => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   const response = await userApi.post("/api/v1/users", userInfo, {
     headers: {
@@ -42,7 +42,7 @@ export const uploadAvatar = async (
   userId: string,
   formData: FormData,
 ): Promise<void> => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   try {
     const response = await userApi.patch(

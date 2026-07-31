@@ -1,6 +1,7 @@
 import { Currency, DEFAULT_CURRENCY } from "@/constants/currencies";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
+import * as SecureStore from "expo-secure-store";
 
 const CURRENCY_KEY = "selected_currency";
 
@@ -11,7 +12,7 @@ export const useCurrency = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await AsyncStorage.getItem(CURRENCY_KEY);
+        const stored = await SecureStore.getItemAsync(CURRENCY_KEY);
         if (stored) setCurrencyState(JSON.parse(stored));
       } catch (e) {
         console.error("Failed to load currency:", e);
@@ -24,7 +25,7 @@ export const useCurrency = () => {
 
   const setCurrency = useCallback(async (newCurrency: Currency) => {
     try {
-      await AsyncStorage.setItem(CURRENCY_KEY, JSON.stringify(newCurrency));
+      await SecureStore.setItemAsync(CURRENCY_KEY, JSON.stringify(newCurrency));
       setCurrencyState(newCurrency);
     } catch (e) {
       console.error("Failed to save currency:", e);

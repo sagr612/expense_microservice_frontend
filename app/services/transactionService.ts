@@ -1,6 +1,7 @@
 import { expenseApi } from "@/app/services/api";
 import { PagedResponse, Transaction } from "@/constants/types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 export interface TransactionPayload {
   title: string;
@@ -10,7 +11,7 @@ export interface TransactionPayload {
   note?: string;
 }
 const getAuthHeaders = async () => {
-  const token = await AsyncStorage.getItem("accessToken");
+  const token = await SecureStore.getItemAsync("accessToken");
 
   return {
     // "X-User-Id": userId,
@@ -22,7 +23,7 @@ export const getTransactions = async (
 ): Promise<PagedResponse<Transaction>> => {
   try {
     console.log("Fetching transactions for user:", userId);
-    const token = await AsyncStorage.getItem("accessToken");
+    const token = await SecureStore.getItemAsync("accessToken");
 
     const response = await expenseApi.get<PagedResponse<Transaction>>(
       "/api/v1/expenses",
@@ -52,7 +53,7 @@ export const getTransaction = async (
 ): Promise<Transaction> => {
   try {
     console.log("Fetching transaction for external ID:", externalId);
-    const token = await AsyncStorage.getItem("accessToken");
+    const token = await SecureStore.getItemAsync("accessToken");
 
     const response = await expenseApi.get<Transaction>(
       `/api/v1/expenses/${externalId}`,
@@ -81,7 +82,7 @@ export const createTransaction = async (
   userId: string,
 ): Promise<Transaction> => {
   try {
-    const token = await AsyncStorage.getItem("accessToken");
+    const token = await SecureStore.getItemAsync("accessToken");
     console.log("Creating transaction for user:", payload.userId);
     const response = await expenseApi.post<Transaction>(
       "/api/v1/expenses",
@@ -112,7 +113,7 @@ export const deleteTransaction = async (
 ): Promise<void> => {
   try {
     console.log("Deleting transaction for external ID:", externalId);
-    const token = await AsyncStorage.getItem("accessToken");
+    const token = await SecureStore.getItemAsync("accessToken");
 
     await expenseApi.delete(`/api/v1/expenses/${externalId}`, {
       headers: {

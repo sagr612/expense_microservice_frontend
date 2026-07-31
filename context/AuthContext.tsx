@@ -7,8 +7,8 @@ import {
 } from "@/app/services/authService";
 import { registerPushToken } from "@/app/services/notificationService";
 import { getExpoPushToken } from "@/app/services/pushTokenService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { createContext, useContext, useEffect, useState } from "react";
 interface AuthContextType {
@@ -74,10 +74,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("📦 Loading stored auth...");
 
-      const storedAccessToken = await AsyncStorage.getItem("accessToken");
-      const storedRefreshToken = await AsyncStorage.getItem("refreshToken");
-      const storedUser = await AsyncStorage.getItem("user");
-      const storedUserId = await AsyncStorage.getItem("userId");
+      // const storedAccessToken = await AsyncStorage.getItem("accessToken");
+      const storedAccessToken = await SecureStore.getItemAsync("accessToken");
+
+      const storedRefreshToken = await SecureStore.getItemAsync("refreshToken");
+      const storedUser = await SecureStore.getItemAsync("user");
+      const storedUserId = await SecureStore.getItemAsync("userId");
 
       console.log("Stored user:", storedUser);
       console.log("Stored userid:", storedUserId);
@@ -120,10 +122,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userFromToken = decoded.sub;
       const userId_1 = decoded.userId;
 
-      await AsyncStorage.setItem("accessToken", newAccessToken);
-      await AsyncStorage.setItem("refreshToken", newRefreshToken);
-      await AsyncStorage.setItem("user", userFromToken);
-      await AsyncStorage.setItem("userId", userId_1);
+      await SecureStore.setItemAsync("accessToken", newAccessToken);
+      await SecureStore.setItemAsync("refreshToken", newRefreshToken);
+      await SecureStore.setItemAsync("user", userFromToken);
+      await SecureStore.setItemAsync("userId", userId_1);
 
       setAccessToken(newAccessToken);
       setRefreshToken(newRefreshToken);
@@ -147,10 +149,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userFromToken = decoded.sub;
       const userId_1 = decoded.userId;
 
-      await AsyncStorage.setItem("accessToken", newAccessToken);
-      await AsyncStorage.setItem("refreshToken", newRefreshToken);
-      await AsyncStorage.setItem("user", userFromToken);
-      await AsyncStorage.setItem("userId", userId_1);
+      await SecureStore.setItemAsync("accessToken", newAccessToken);
+      await SecureStore.setItemAsync("refreshToken", newRefreshToken);
+      await SecureStore.setItemAsync("user", userFromToken);
+      await SecureStore.setItemAsync("userId", userId_1);
 
       setAccessToken(newAccessToken);
       setRefreshToken(newRefreshToken);
@@ -177,10 +179,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("new access token:", newAccessToken);
       console.log("new refresh token:", newRefreshToken);
       // ✅ Save new tokens to storage
-      await AsyncStorage.setItem("accessToken", newAccessToken);
-      await AsyncStorage.setItem("refreshToken", newRefreshToken);
-      await AsyncStorage.setItem("user", userFromToken);
-      await AsyncStorage.setItem("userId", userId_1);
+      await SecureStore.setItemAsync("accessToken", newAccessToken);
+      await SecureStore.setItemAsync("refreshToken", newRefreshToken);
+      await SecureStore.setItemAsync("user", userFromToken);
+      await SecureStore.setItemAsync("userId", userId_1);
 
       // ✅ Update state
       setAccessToken(newAccessToken);
@@ -195,12 +197,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const clearAuth = async () => {
-    await AsyncStorage.multiRemove([
-      "accessToken",
-      "refreshToken",
-      "user",
-      "userId",
-    ]);
+    await SecureStore.deleteItemAsync("accessToken");
+    await SecureStore.deleteItemAsync("refreshToken");
+    await SecureStore.deleteItemAsync("user");
+    await SecureStore.deleteItemAsync("userId");
     setAccessToken(null);
     setRefreshToken(null);
     setUser(null);
@@ -223,10 +223,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("userid:", userId_1);
       console.log("userid ", userId_1);
       // ✅ Save to storage
-      await AsyncStorage.setItem("accessToken", newAccessToken);
-      await AsyncStorage.setItem("refreshToken", newRefreshToken);
-      await AsyncStorage.setItem("user", userFromToken);
-      await AsyncStorage.setItem("userId", userId_1);
+      await SecureStore.setItemAsync("accessToken", newAccessToken);
+      await SecureStore.setItemAsync("refreshToken", newRefreshToken);
+      await SecureStore.setItemAsync("user", userFromToken);
+      await SecureStore.setItemAsync("userId", userId_1);
 
       // ✅ Update state
       setAccessToken(newAccessToken);
@@ -281,10 +281,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("userid:", userId_1);
       console.log("userid ", userId_1);
       // ✅ Save to storage
-      await AsyncStorage.setItem("accessToken", newAccessToken);
-      await AsyncStorage.setItem("refreshToken", newRefreshToken);
-      await AsyncStorage.setItem("user", userFromToken);
-      await AsyncStorage.setItem("userId", userId_1);
+      await SecureStore.setItemAsync("accessToken", newAccessToken);
+      await SecureStore.setItemAsync("refreshToken", newRefreshToken);
+      await SecureStore.setItemAsync("user", userFromToken);
+      await SecureStore.setItemAsync("userId", userId_1);
 
       // ✅ Update state
       setAccessToken(newAccessToken);
