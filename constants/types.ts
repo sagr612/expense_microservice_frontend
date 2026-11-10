@@ -59,6 +59,7 @@ export interface PagedResponse<T> {
   totalPages: number;
   number: number;
   size: number;
+  last: boolean
 }
 
 export const getCategoryIcon = (
@@ -137,3 +138,53 @@ export const notificationIcons: Record<
   SALARY: "trending-up",
   GENERAL: "notifications",
 };
+
+export interface BudgetStatus {
+  category: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  percentageUsed: number;
+}
+
+export interface BudgetDto {
+  category: string;
+  amount: number;
+  month: number;
+  year: number;
+}
+
+export type CategoryType =
+  | "FOOD"
+  | "TRANSPORT"
+  | "SHOPPING"
+  | "BILLS"
+  | "ENTERTAINMENT"
+  | "HEALTH"
+  | "SALARY"
+  | "FREELANCE"
+  | "INVESTMENT"
+  | "GIFT"
+  | "OTHERS";
+
+export interface CategoryAnalytics {
+  analytics: Record<string, number>;
+}
+
+export interface MonthlyAnalytics {
+  year: number;
+  month: number;
+  totalAmount: number;
+}
+
+export interface CategoryAnalyticsResponse {
+  expenses: Partial<Record<CategoryType, number>>;
+  income: Partial<Record<CategoryType, number>>;
+}
+
+export interface MonthlyAnalyticsDto {
+  year: number;
+  month: number;
+  totalExpense: number;
+  totalIncome: number;
+}

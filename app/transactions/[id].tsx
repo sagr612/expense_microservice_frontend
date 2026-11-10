@@ -5,6 +5,7 @@ import {
   getCategoryIcon,
   Transaction,
 } from "@/constants/types";
+import { useAuth } from "@/context/AuthContext";
 import { useTransactions } from "@/context/TransactionContext";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatDate } from "@/utils/utility";
@@ -12,8 +13,9 @@ import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import { getTransaction as fetchTransactionById } from "@/app/services/transactionService";
 
 const cardShadow = {
   shadowColor: "#1E1B2E",
@@ -31,15 +33,30 @@ const TransactionDetail = () => {
   const [transaction, setTransaction] = useState<Transaction | undefined>();
   const [editModal, setEditModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
   const { currency } = useCurrency();
+  const { userId } = useAuth();
 
   useEffect(() => {
     if (!id) return;
-    const t = transactions.find(
+    const inMemory = transactions.find(
       (t) => t.externalId === id || t.externalId === String(id),
     );
-    setTransaction(t);
-  }, [id, transactions]);
+    if (inMemory) {
+      setTransaction(inMemory);
+      return;
+    }
+
+    if (userId) {
+      setLoading(true);
+      fetchTransactionById(userId, id)
+        .then((data) => setTransaction(data))
+        .catch((err) => console.log("Failed to fetch transaction by id:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [id, transactions, userId]);
 
   const typeLabel = (t?: Transaction) => {
     if (!t) return "";
@@ -91,6 +108,14 @@ const TransactionDetail = () => {
   const categoryColor = transaction
     ? getCategoryColor(transaction.category)
     : "#8B5CF6";
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-[#F7F7FB]">
+        <ActivityIndicator size="large" color="#7C3AED" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-[#F7F7FB]">
@@ -289,7 +314,7 @@ const TransactionDetail = () => {
             Transaction not found
           </Text>
           <Text className="text-gray-400 text-center text-[14px] font-poppins mt-2 leading-6">
-            This transaction doesn't exist or may have been deleted.
+            This transaction doesn&apos;t exist or may have been deleted.
           </Text>
         </View>
       )}

@@ -1,5 +1,4 @@
 import { authApi } from "@/app/services/api";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 export interface AuthResponse {
   accessToken: string;
@@ -29,7 +28,7 @@ export const signup = async (payload: {
   first_name: string;
   last_name: string;
   username: string;
-  phone_number: number;
+  phone_number: string;
   email: string;
   password: string;
 }): Promise<AuthResponse> => {
@@ -98,7 +97,6 @@ export const changePassword = async (payload: {
 
 export const changeUsername = async (payload: {
   newUsername: string;
-  currentUsername: string;
 }): Promise<AuthResponse> => {
   try {
     console.log("🔄 Attempting username change");
@@ -121,5 +119,43 @@ export const changeUsername = async (payload: {
       error.response?.data ||
       "Username change failed";
     throw new Error(message);
+  }
+};
+
+export const forgotPassword = async (email: string): Promise<string> => {
+  try {
+    console.log("Attempting forgot password for:", email);
+    const response = await authApi.post<string>("/auth/v1/forgot-password", {
+      email,
+    });
+    console.log("Forgot password response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Forgot password error:",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+
+export const resetPassword = async (payload: {
+  token: string;
+  newPassword: string;
+}): Promise<string> => {
+  try {
+    console.log("Attempting reset password with token");
+    const response = await authApi.post<string>(
+      "/auth/v1/reset-password",
+      payload,
+    );
+    console.log("Reset password response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Reset password error:",
+      error.response?.data || error.message,
+    );
+    throw error;
   }
 };

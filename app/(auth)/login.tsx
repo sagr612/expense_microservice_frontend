@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage } from "@/utils/utility";
 import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
@@ -39,7 +40,10 @@ const Login = () => {
       Toast.show({
         type: "error",
         text1: "Sign in failed",
-        text2: err?.message ?? "Please check your details and try again",
+        text2: extractErrorMessage(
+          err,
+          "Please check your details and try again",
+        ),
       });
     } finally {
       setSubmitting(false);
@@ -137,11 +141,13 @@ const Login = () => {
               </View>
 
               {/* Forgot Password */}
-              <TouchableOpacity className="mb-6 self-end">
-                <Text className="text-violet-600 text-[13px] font-poppins-semibold">
-                  Forgot password?
-                </Text>
-              </TouchableOpacity>
+              <Link href="/(auth)/forgot-password" asChild>
+                <TouchableOpacity className="mb-6 self-end">
+                  <Text className="text-violet-600 text-[13px] font-poppins-semibold">
+                    Forgot password?
+                  </Text>
+                </TouchableOpacity>
+              </Link>
 
               {/* Login Button */}
               <TouchableOpacity
@@ -179,7 +185,7 @@ const Login = () => {
               {/* Sign Up Link */}
               <View className="flex-row justify-center items-center">
                 <Text className="text-gray-500 text-[14px] font-poppins">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                 </Text>
                 <Link href="/(auth)/SignUp" asChild>
                   <TouchableOpacity>

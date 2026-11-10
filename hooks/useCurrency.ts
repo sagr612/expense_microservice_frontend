@@ -13,7 +13,16 @@ export const useCurrency = () => {
     const load = async () => {
       try {
         const stored = await SecureStore.getItemAsync(CURRENCY_KEY);
-        if (stored) setCurrencyState(JSON.parse(stored));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.code === "INR") {
+            setCurrencyState(parsed);
+          } else {
+            // Overwrite any old USD/EUR cache with INR
+            await SecureStore.setItemAsync(CURRENCY_KEY, JSON.stringify(DEFAULT_CURRENCY));
+            setCurrencyState(DEFAULT_CURRENCY);
+          }
+        }
       } catch (e) {
         console.error("Failed to load currency:", e);
       } finally {
@@ -21,7 +30,7 @@ export const useCurrency = () => {
       }
     };
     load();
-  }, [currency]);
+  }, []);
 
   const setCurrency = useCallback(async (newCurrency: Currency) => {
     try {

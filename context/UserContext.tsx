@@ -1,6 +1,10 @@
 import { userApi } from "@/app/services/api";
 import * as userService from "@/app/services/userService";
-import { UserContextType, UserInfoDto } from "@/interfaces/UserTypes";
+import {
+  UserContextType,
+  UserInfoDto,
+  UserUpdateRequest,
+} from "@/interfaces/UserTypes";
 import { createContext, useContext, useState } from "react";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -67,6 +71,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateUser = async (userId: string, userInfo: UserUpdateRequest) => {
+    try {
+      console.log("Updating user ", userId, "......");
+      const updatedUser = await userService.updateUser(userId, userInfo);
+      // console.log(updatedUser);
+      setUser(updatedUser);
+      console.log("User updated successfully.");
+    } catch (err) {
+      console.error("Error while updating a user", err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -76,6 +95,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         getUser,
         createUpdateUser,
         uploadAvatar,
+        updateUser,
       }}
     >
       {children}

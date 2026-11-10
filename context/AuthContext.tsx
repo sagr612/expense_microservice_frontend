@@ -5,7 +5,10 @@ import {
   refreshToken as refreshTokenRequest,
   signup as signupRequest,
 } from "@/app/services/authService";
-import { registerPushToken } from "@/app/services/notificationService";
+import {
+  registerPushToken,
+  unregisterPushToken,
+} from "@/app/services/notificationService";
 import { getExpoPushToken } from "@/app/services/pushTokenService";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -89,7 +92,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const currentTime = Date.now() / 1000;
 
         if (decoded.exp > currentTime) {
-          3;
           // ✅ Token still valid, restore session
           setAccessToken(storedAccessToken);
           setRefreshToken(storedRefreshToken);
@@ -133,6 +135,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUserId(userId_1);
     } catch (error) {
       console.error("❌ Failed to change password:", error);
+      throw error;
     }
   };
   const changeUsername = async (
@@ -141,8 +144,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   ) => {
     try {
       const { accessToken: newAccessToken, token: newRefreshToken } =
-        await changeUsernameRequest({ newUsername, currentUsername });
-      console.log("✅ Password changed successfully");
+        await changeUsernameRequest({ newUsername });
+      console.log("✅ Username changed successfully");
 
       const decoded = jwtDecode<JwtPayload>(newAccessToken);
 
@@ -160,6 +163,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUserId(userId_1);
     } catch (error) {
       console.error("❌ Failed to change username:", error);
+      throw error;
     }
   };
 
@@ -246,12 +250,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      console.log("🚪 Logging out...");
+      console.log("Logging out...");
+      try {
+        await unregisterPushToken();
+      } catch (error) {
+        console.log("Push token unregister error", error);
+      }
       await clearAuth();
-      console.log("✅ Logged out successfully");
+      console.log("Logged out successfully");
       router.replace("/(auth)/login");
     } catch (error) {
-      console.error("❌ Logout error:", error);
+      console.error("Logout error:", error);
     }
   };
 
@@ -264,12 +273,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string,
   ) => {
     try {
+      setIsLoading(true);
       const { accessToken: newAccessToken, token: newRefreshToken } =
         await signupRequest({
           first_name: firstName,
           last_name: lastName,
           username: userName,
-          phone_number: Number(phoneNumber),
+          phone_number: phoneNumber,
           email,
           password,
         });

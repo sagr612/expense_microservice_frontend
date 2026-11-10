@@ -4,8 +4,10 @@ import Icon from "@expo/vector-icons/Ionicons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   RefreshControl,
   Text,
@@ -24,8 +26,15 @@ const cardShadow = {
 };
 
 export default function NotificationsScreen() {
-  const { notifications, unreadCount, loading, refresh, markNotificationRead } =
+  const { notifications, unreadCount, loading, refresh, markNotificationRead, isLoadingMore, loadMore } =
     useNotifications();
+
+  // automatically fetch latest notifications every time user opens or switches to this tab
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [])
+  )
 
   return (
     <View className="flex-1 bg-[#F7F7FB]">
@@ -69,6 +78,15 @@ export default function NotificationsScreen() {
           />
         }
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <View className="items-center py-4">
+              <ActivityIndicator size="large" color="#8B5CF6" />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={() => (
           <View className="items-center mt-20 px-8">
             <View className="w-24 h-24 rounded-full bg-violet-50 items-center justify-center">
@@ -124,11 +142,10 @@ export default function NotificationsScreen() {
                   <View className="flex-row items-start justify-between">
                     <Text
                       numberOfLines={1}
-                      className={`text-[15px] flex-1 ${
-                        item.isRead
-                          ? "font-poppins-medium text-gray-700"
-                          : "font-poppins-bold text-gray-900"
-                      }`}
+                      className={`text-[15px] flex-1 ${item.isRead
+                        ? "font-poppins-medium text-gray-700"
+                        : "font-poppins-bold text-gray-900"
+                        }`}
                     >
                       {item.title}
                     </Text>

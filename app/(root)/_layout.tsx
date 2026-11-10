@@ -4,7 +4,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 
 type TabIconProps = {
@@ -42,7 +42,19 @@ const MainAppLayout = () => {
 
   // Hooks must run unconditionally, before any early return.
   const { expoPushToken, notification } = usePushNotifications();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, refresh } = useNotifications();
+  const lastNotificationIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (notification) {
+      refresh();
+    }
+    const id = notification?.request?.identifier;
+    if (id && id !== lastNotificationIdRef.current) {
+      lastNotificationIdRef.current = id;
+      refresh();
+    }
+  }, [notification]);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;

@@ -15,11 +15,8 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import {
-  BudgetStatus,
-  createBudget,
-  getBudgetStatus,
-} from "../services/transactionService";
+import { BudgetStatus } from "@/constants/types";
+import { createBudget, getBudgetStatus } from "../services/transactionService";
 
 const categoryColors: Record<string, string> = {
   FOOD: "#8B5CF6",
@@ -27,8 +24,8 @@ const categoryColors: Record<string, string> = {
   HEALTH: "#F97316",
   ENTERTAINMENT: "#EC4899",
   SHOPPING: "#3B82F6",
-  EDUCATION: "#F59E0B",
-  OTHER: "#6B7280",
+  BILLS: "#EF4444",
+  OTHERS: "#6B7280",
 };
 
 const categoryIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> =
@@ -38,8 +35,8 @@ const categoryIcons: Record<string, React.ComponentProps<typeof Icon>["name"]> =
     HEALTH: "medical",
     ENTERTAINMENT: "film",
     SHOPPING: "cart",
-    EDUCATION: "school",
-    OTHER: "ellipsis-horizontal",
+    BILLS: "receipt",
+    OTHERS: "ellipsis-horizontal",
   };
 
 const cardShadow = {
@@ -353,15 +350,15 @@ const BudgetScreen = () => {
                       style={{ height: 52 }}
                     >
                       <Picker.Item label="🍔 Food" value="FOOD" />
-                      <Picker.Item label="🚕 Transport" value="TRANSPORT" />
-                      <Picker.Item label="🩺 Health" value="HEALTH" />
+                      <Picker.Item label="🚗 Transport" value="TRANSPORT" />
+                      <Picker.Item label="🛒 Shopping" value="SHOPPING" />
+                      <Picker.Item label="🧾 Bills" value="BILLS" />
                       <Picker.Item
-                        label="🎬 Entertainment"
+                        label="🎮 Entertainment"
                         value="ENTERTAINMENT"
                       />
-                      <Picker.Item label="🛍️ Shopping" value="SHOPPING" />
-                      <Picker.Item label="📚 Education" value="EDUCATION" />
-                      <Picker.Item label="📦 Other" value="OTHER" />
+                      <Picker.Item label="💊 Health" value="HEALTH" />
+                      <Picker.Item label="📦 Others" value="OTHERS" />
                     </Picker>
                   </View>
 

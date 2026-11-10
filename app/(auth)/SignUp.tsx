@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { extractErrorMessage } from "@/utils/utility";
 import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
@@ -69,7 +70,7 @@ const SignUp = () => {
       Toast.show({
         type: "error",
         text1: "Sign up failed",
-        text2: err?.message ?? "Please try again",
+        text2: extractErrorMessage(err, "Please try again"),
       });
     } finally {
       setSubmitting(false);

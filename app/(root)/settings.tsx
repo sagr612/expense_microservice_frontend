@@ -21,12 +21,17 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import { changePassword } from "../services/authService";
+import { extractErrorMessage } from "@/utils/utility";
 
 const Settings = () => {
-  const { user: authUser, userId, logout, changeUsername } = useAuth();
-  const { user, getUser, isLoading, uploadAvatar, createUpdateUser } =
-    useUser();
+  const {
+    user: authUser,
+    userId,
+    logout,
+    changeUsername,
+    changePassword,
+  } = useAuth();
+  const { user, getUser, isLoading, uploadAvatar, updateUser } = useUser();
   const { currency, setCurrency } = useSharedCurrency();
 
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
@@ -123,7 +128,7 @@ const Settings = () => {
       Toast.show({
         type: "error",
         text1: "Username Change Failed",
-        text2: err.message ?? "Username change failed.",
+        text2: extractErrorMessage(err, "Username change failed."),
       });
     }
     setNewUsername("");
@@ -132,10 +137,7 @@ const Settings = () => {
   const handleChangePassword = async () => {
     if (newPassword === confirmPassword && currentPassword) {
       try {
-        await changePassword({
-          oldPassword: currentPassword,
-          newPassword: newPassword,
-        });
+        await changePassword(currentPassword, newPassword);
         console.log("Password changed successfully");
         Toast.show({
           type: "success",
@@ -151,7 +153,7 @@ const Settings = () => {
         Toast.show({
           type: "error",
           text1: "Password Change Failed",
-          text2: err.message ?? "Password change failed.",
+          text2: extractErrorMessage(err, "Password change failed."),
         });
       }
     } else {
@@ -176,16 +178,13 @@ const Settings = () => {
         const updatedLastName = lastName || user?.last_name || "";
 
         const reqpayload = {
-          user_id: userId!,
           first_name: updatedFirstName,
           last_name: updatedLastName,
-          phone_number: user?.phone_number,
-          email: user?.email,
-          profile_pic: user?.profile_pic,
-          profile_image_public_id: user?.profile_image_public_id,
+          email: user?.email || "",
+          phone_number: user?.phone_number || "",
         };
 
-        await createUpdateUser(reqpayload);
+        await updateUser(userId!, reqpayload);
         Toast.show({
           type: "success",
           text1: "Name Updated",
@@ -200,7 +199,7 @@ const Settings = () => {
         Toast.show({
           type: "error",
           text1: "Name Change Failed",
-          text2: err.message ?? "Name change failed.",
+          text2: extractErrorMessage(err, "Name change failed."),
         });
       }
     } else {
@@ -256,19 +255,19 @@ const Settings = () => {
         },
       ],
     },
-    {
-      id: "preferences",
-      title: "Preferences",
-      items: [
-        {
-          id: "currency",
-          icon: "cash-outline",
-          label: "Currency",
-          value: `${currency.flag}  ${currency.code} (${currency.symbol})`,
-          onPress: () => setCurrencyModal(true),
-        },
-      ],
-    },
+    // {
+    //   id: "preferences",
+    //   title: "Preferences",
+    //   items: [
+    //     {
+    //       id: "currency",
+    //       icon: "cash-outline",
+    //       label: "Currency",
+    //       value: `${currency.flag}  ${currency.code} (${currency.symbol})`,
+    //       onPress: () => setCurrencyModal(true),
+    //     },
+    //   ],
+    // },
   ];
 
   return (
@@ -381,11 +380,10 @@ const Settings = () => {
                       key={item.id}
                       activeOpacity={0.7}
                       onPress={item.onPress}
-                      className={`flex-row items-center px-4 py-4 ${
-                        index !== section.items.length - 1
-                          ? "border-b border-gray-100"
-                          : ""
-                      }`}
+                      className={`flex-row items-center px-4 py-4 ${index !== section.items.length - 1
+                        ? "border-b border-gray-100"
+                        : ""
+                        }`}
                     >
                       <View className="w-10 h-10 bg-violet-50 rounded-full items-center justify-center">
                         <Icon name={item.icon} size={18} color="#8B5CF6" />
@@ -472,12 +470,12 @@ const Settings = () => {
             onClose={() => setAvatarModal(false)}
           />
 
-          <CurrencyPickerModal
+          {/* <CurrencyPickerModal
             visible={currencyModal}
             selected={currency}
             onSelect={setCurrency}
             onClose={() => setCurrencyModal(false)}
-          />
+          /> */}
         </>
       )}
     </ScrollView>

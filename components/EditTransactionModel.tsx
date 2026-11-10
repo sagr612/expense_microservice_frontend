@@ -130,9 +130,8 @@ const EditTransactionModal = ({
                       />
                     ) : null}
                     <Text
-                      className={`font-poppins-bold text-sm capitalize ${
-                        type === t ? "text-white" : "text-gray-500"
-                      }`}
+                      className={`font-poppins-bold text-sm capitalize ${type === t ? "text-white" : "text-gray-500"
+                        }`}
                     >
                       {t}
                     </Text>
@@ -146,9 +145,8 @@ const EditTransactionModal = ({
                   AMOUNT
                 </Text>
                 <View
-                  className={`flex-row items-center bg-gray-50 border rounded-2xl px-4 py-3 ${
-                    errors.amount ? "border-red-400" : "border-gray-100"
-                  }`}
+                  className={`flex-row items-center bg-gray-50 border rounded-2xl px-4 py-3 ${errors.amount ? "border-red-400" : "border-gray-100"
+                    }`}
                 >
                   <Text className="text-gray-400 font-poppins-bold text-lg mr-2">
                     $
@@ -177,9 +175,8 @@ const EditTransactionModal = ({
                   value={title}
                   onChangeText={setTitle}
                   placeholder="e.g. Grocery run"
-                  className={`bg-gray-50 border rounded-2xl px-4 py-3 text-gray-800 font-poppins ${
-                    errors.title ? "border-red-400" : "border-gray-100"
-                  }`}
+                  className={`bg-gray-50 border rounded-2xl px-4 py-3 text-gray-800 font-poppins ${errors.title ? "border-red-400" : "border-gray-100"
+                    }`}
                 />
                 {errors.title && (
                   <Text className="text-red-400 text-xs font-poppins mt-1 ml-1">
@@ -195,11 +192,11 @@ const EditTransactionModal = ({
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
                   {categories[type].map((cat) => {
-                    const selected = category === cat.name;
+                    const selected = category === cat.id;
                     return (
                       <TouchableOpacity
                         key={cat.id}
-                        onPress={() => setCategory(cat.name)}
+                        onPress={() => setCategory(cat.id)}
                         className="overflow-hidden rounded-2xl"
                       >
                         {selected ? (

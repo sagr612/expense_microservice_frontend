@@ -27,10 +27,14 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AuthProvider } from "@/context/AuthContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { SmsReaderProvider } from "@/context/SmsReaderContext";
 import { TransactionProvider } from "@/context/TransactionContext";
 import { UserProvider } from "@/context/UserContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Toast from "react-native-toast-message";
 import "./global.css";
+
+export { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -82,25 +86,29 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1 }}>
-        <UserProvider>
+        <ErrorBoundary>
           <AuthProvider>
-            <TransactionProvider>
-              <CurrencyProvider>
-                <NotificationProvider>
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                    }}
-                  >
-                    <Stack.Screen name="(root)" />
-                    <Stack.Screen name="(auth)" />
-                  </Stack>
-                  <Toast />
-                </NotificationProvider>
-              </CurrencyProvider>
-            </TransactionProvider>
+            <UserProvider>
+              <TransactionProvider>
+                <SmsReaderProvider>
+                  <CurrencyProvider>
+                    <NotificationProvider>
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                        }}
+                      >
+                        <Stack.Screen name="(root)" />
+                        <Stack.Screen name="(auth)" />
+                      </Stack>
+                      <Toast />
+                    </NotificationProvider>
+                  </CurrencyProvider>
+                </SmsReaderProvider>
+              </TransactionProvider>
+            </UserProvider>
           </AuthProvider>
-        </UserProvider>
+        </ErrorBoundary>
       </SafeAreaView>
     </SafeAreaProvider>
   );

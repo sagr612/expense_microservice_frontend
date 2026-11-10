@@ -1,14 +1,18 @@
 import TransactionItem from "@/components/TransactionItem";
+import { useSharedCurrency } from "@/context/CurrencyContext";
 import { useTransactions } from "@/context/TransactionContext";
+import { useCurrency } from "@/hooks/useCurrency";
 import Icon from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  RefreshControl,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,7 +20,7 @@ import {
 } from "react-native";
 
 const AllTransactions = () => {
-  const { transactions } = useTransactions();
+  const { transactions, isLoading, isLoadingMore, refresh, loadMore } = useTransactions();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all"); // 'all', 'income', 'expense'
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -24,6 +28,8 @@ const AllTransactions = () => {
   const [maxAmount, setMaxAmount] = useState("");
   const [tempMinAmount, setTempMinAmount] = useState("");
   const [tempMaxAmount, setTempMaxAmount] = useState("");
+
+  const { currency } = useSharedCurrency();
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
@@ -131,9 +137,8 @@ const AllTransactions = () => {
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => setSelectedType("all")}
-            className={`px-4 py-2.5 rounded-full mr-2 ${
-              selectedType === "all" ? "bg-violet-600" : "bg-white"
-            }`}
+            className={`px-4 py-2.5 rounded-full mr-2 ${selectedType === "all" ? "bg-violet-600" : "bg-white"
+              }`}
             style={
               selectedType !== "all"
                 ? { borderWidth: 1, borderColor: "#EDEBF3" }
@@ -141,9 +146,8 @@ const AllTransactions = () => {
             }
           >
             <Text
-              className={`font-poppins-semibold text-[13px] ${
-                selectedType === "all" ? "text-white" : "text-gray-500"
-              }`}
+              className={`font-poppins-semibold text-[13px] ${selectedType === "all" ? "text-white" : "text-gray-500"
+                }`}
             >
               All
             </Text>
@@ -151,9 +155,8 @@ const AllTransactions = () => {
 
           <TouchableOpacity
             onPress={() => setSelectedType("income")}
-            className={`px-4 py-2.5 rounded-full mr-2 ${
-              selectedType === "income" ? "bg-emerald-500" : "bg-white"
-            }`}
+            className={`px-4 py-2.5 rounded-full mr-2 ${selectedType === "income" ? "bg-emerald-500" : "bg-white"
+              }`}
             style={
               selectedType !== "income"
                 ? { borderWidth: 1, borderColor: "#EDEBF3" }
@@ -167,9 +170,8 @@ const AllTransactions = () => {
                 color={selectedType === "income" ? "white" : "#9CA3AF"}
               />
               <Text
-                className={`ml-1.5 font-poppins-semibold text-[13px] ${
-                  selectedType === "income" ? "text-white" : "text-gray-500"
-                }`}
+                className={`ml-1.5 font-poppins-semibold text-[13px] ${selectedType === "income" ? "text-white" : "text-gray-500"
+                  }`}
               >
                 Income
               </Text>
@@ -178,9 +180,8 @@ const AllTransactions = () => {
 
           <TouchableOpacity
             onPress={() => setSelectedType("expense")}
-            className={`px-4 py-2.5 rounded-full ${
-              selectedType === "expense" ? "bg-red-500" : "bg-white"
-            }`}
+            className={`px-4 py-2.5 rounded-full ${selectedType === "expense" ? "bg-red-500" : "bg-white"
+              }`}
             style={
               selectedType !== "expense"
                 ? { borderWidth: 1, borderColor: "#EDEBF3" }
@@ -194,9 +195,8 @@ const AllTransactions = () => {
                 color={selectedType === "expense" ? "white" : "#9CA3AF"}
               />
               <Text
-                className={`ml-1.5 font-poppins-semibold text-[13px] ${
-                  selectedType === "expense" ? "text-white" : "text-gray-500"
-                }`}
+                className={`ml-1.5 font-poppins-semibold text-[13px] ${selectedType === "expense" ? "text-white" : "text-gray-500"
+                  }`}
               >
                 Expense
               </Text>
@@ -266,6 +266,23 @@ const AllTransactions = () => {
           keyExtractor={(item) => item.externalId!}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+
+          ListFooterComponent={() =>
+            isLoadingMore ? (
+              <View className="py-4 items-center">
+                <ActivityIndicator size="small" color="#8B5CF6" />
+              </View>
+            ) : null
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refresh}
+              tintColor="#8B5CF6"
+            />
+          }
         />
       ) : (
         <View className="flex-1 items-center justify-center px-8">
@@ -338,7 +355,9 @@ const AllTransactions = () => {
                     From
                   </Text>
                   <View className="bg-gray-50 rounded-2xl px-4 py-3.5 flex-row items-center mb-4 border border-gray-100">
-                    <Text className="text-lg text-gray-400 mr-2">₹</Text>
+                    <Text className="text-lg text-gray-400 mr-2">
+                      {currency.symbol}
+                    </Text>
                     <TextInput
                       value={tempMinAmount}
                       onChangeText={setTempMinAmount}
@@ -353,7 +372,9 @@ const AllTransactions = () => {
                     To
                   </Text>
                   <View className="bg-gray-50 rounded-2xl px-4 py-3.5 flex-row items-center border border-gray-100">
-                    <Text className="text-lg text-gray-400 mr-2">₹</Text>
+                    <Text className="text-lg text-gray-400 mr-2">
+                      {currency.symbol}
+                    </Text>
                     <TextInput
                       value={tempMaxAmount}
                       onChangeText={setTempMaxAmount}

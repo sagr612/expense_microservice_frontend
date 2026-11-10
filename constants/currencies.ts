@@ -28,4 +28,9 @@ export const CURRENCIES: Currency[] = [
   { code: "ZAR", name: "South African Rand", symbol: "R", flag: "🇿🇦" },
 ];
 
-export const DEFAULT_CURRENCY = CURRENCIES[0]; // USD
+export const DEFAULT_CURRENCY: Currency = {
+  code: "INR",
+  name: "Indian Rupee",
+  symbol: "₹",
+  flag: "🇮🇳",
+};

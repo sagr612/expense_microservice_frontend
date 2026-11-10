@@ -1,35 +1,55 @@
 import { expenseApi } from "@/app/services/api";
-import { PagedResponse, Transaction } from "@/constants/types";
+import {
+  BudgetDto,
+  CategoryAnalyticsResponse,
+  CategoryType,
+  MonthlyAnalyticsDto,
+  PagedResponse,
+  Transaction,
+} from "@/constants/types";
+import { Summary } from "@/interfaces/UserTypes";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 
-export interface TransactionPayload {
-  title: string;
-  amount: number;
-  category: string;
-  type: "income" | "expense";
-  note?: string;
-}
+// export interface TransactionPayload {
+//   title: string;
+//   amount: number;
+//   category: string;
+//   type: "income" | "expense";
+//   note?: string;
+// }
+
 const getAuthHeaders = async () => {
   const token = await SecureStore.getItemAsync("accessToken");
 
   return {
-    // "X-User-Id": userId,
     Authorization: `Bearer ${token}`,
   };
 };
 export const getTransactions = async (
   userId: string,
+  page: number = 0,
+  size: number = 100,
 ): Promise<PagedResponse<Transaction>> => {
   try {
-    console.log("Fetching transactions for user:", userId);
+    console.log(
+      "Fetching transactions for user:",
+      userId,
+      " page:",
+      page,
+      " size:",
+      size,
+    );
     const token = await SecureStore.getItemAsync("accessToken");
 
     const response = await expenseApi.get<PagedResponse<Transaction>>(
       "/api/v1/expenses",
       {
+        params: {
+          page,
+          size,
+        },
         headers: {
-          "X-User-Id": userId,
           Authorization: `Bearer ${token}`,
         },
       },
@@ -59,7 +79,6 @@ export const getTransaction = async (
       `/api/v1/expenses/${externalId}`,
       {
         headers: {
-          "X-User-Id": userId,
           Authorization: `Bearer ${token}`,
         },
       },
@@ -89,7 +108,6 @@ export const createTransaction = async (
       payload,
       {
         headers: {
-          "X-User-Id": userId,
           Authorization: `Bearer ${token}`,
         },
       },
@@ -117,7 +135,6 @@ export const deleteTransaction = async (
 
     await expenseApi.delete(`/api/v1/expenses/${externalId}`, {
       headers: {
-        "X-User-Id": userId,
         Authorization: `Bearer ${token}`,
       },
     });
@@ -141,13 +158,14 @@ export const updateTransaction = async (
   userId: string,
 ): Promise<Transaction> => {
   try {
+    const token = await SecureStore.getItemAsync("accessToken");
     console.log("updating transaction for user:", payload.userId);
     const response = await expenseApi.put<Transaction>(
       "/api/v1/expenses",
       payload,
       {
         headers: {
-          "X-User-Id": userId,
+          Authorization: `Bearer ${token}`,
         },
       },
     );
@@ -164,16 +182,6 @@ export const updateTransaction = async (
   }
 };
 
-export interface CategoryAnalytics {
-  analytics: Record<string, number>;
-}
-
-export interface MonthlyAnalytics {
-  year: number;
-  month: number;
-  totalAmount: number;
-}
-
 export const getCategoryAnalytics = async (
   userId: string,
 ): Promise<CategoryAnalyticsResponse> => {
@@ -184,7 +192,7 @@ export const getCategoryAnalytics = async (
         headers: await getAuthHeaders(),
       },
     );
-
+    console.log("Successfully fetched category analytics for user:", userId);
     return response.data;
   } catch (error: any) {
     console.error(
@@ -206,7 +214,7 @@ export const getMonthlyAnalytics = async (
         headers: await getAuthHeaders(),
       },
     );
-
+    console.debug("Successfully fetched monthly analytics:", response.data);
     return response.data;
   } catch (error: any) {
     console.error(
@@ -218,30 +226,9 @@ export const getMonthlyAnalytics = async (
   }
 };
 
-export interface CategoryAnalyticsResponse {
-  analytics: Partial<Record<CategoryType, number>>;
-}
-export type CategoryType =
-  | "FOOD"
-  | "TRANSPORT"
-  | "SHOPPING"
-  | "BILLS"
-  | "ENTERTAINMENT"
-  | "HEALTH"
-  | "SALARY"
-  | "FREELANCE"
-  | "INVESTMENT"
-  | "GIFT"
-  | "OTHERS";
-
-export interface MonthlyAnalyticsDto {
-  year: number;
-  month: number;
-  totalAmount: number;
-}
 export const getBudgetStatus = async (month: number, year: number) => {
   const response = await expenseApi.get(
-    `api/v1/expenses/budgets/status?month=${month}&year=${year}`,
+    `/api/v1/expenses/budgets/status?month=${month}&year=${year}`,
     {
       headers: await getAuthHeaders(),
     },
@@ -250,29 +237,22 @@ export const getBudgetStatus = async (month: number, year: number) => {
   return response.data;
 };
 
-export interface BudgetStatus {
-  category: string;
-  budget: number;
-  spent: number;
-  remaining: number;
-  percentageUsed: number;
-}
-
-export interface BudgetDto {
-  category: string;
-  amount: number;
-  month: number;
-  year: number;
-}
-
 export const createBudget = async (budget: BudgetDto): Promise<BudgetDto> => {
   const response = await expenseApi.post<BudgetDto>(
-    "api/v1/expenses/budgets",
+    "/api/v1/expenses/budgets",
     budget,
     {
       headers: await getAuthHeaders(),
     },
   );
   console.log("Successfully created budget:", response.data);
+  return response.data;
+};
+
+export const getSummary = async (): Promise<Summary> => {
+  const response = await expenseApi.get<Summary>("/api/v1/expenses/summary", {
+    headers: await getAuthHeaders(),
+  });
+  console.log("Successfully fetched summary");
   return response.data;
 };

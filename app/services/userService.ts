@@ -1,5 +1,5 @@
 import { userApi } from "@/app/services/api";
-import { UserInfoDto } from "@/interfaces/UserTypes";
+import { UserInfoDto, UserUpdateRequest } from "@/interfaces/UserTypes";
 import * as SecureStore from "expo-secure-store";
 
 export const getUser = async (userId: string): Promise<UserInfoDto> => {
@@ -65,4 +65,18 @@ export const uploadAvatar = async (
     );
     throw error;
   }
+};
+
+export const updateUser = async (
+  userId: string,
+  userInfo: UserUpdateRequest,
+) => {
+  const token = await SecureStore.getItemAsync("accessToken");
+  const response = await userApi.put(`/api/v1/users/${userId}`, userInfo, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
 };
